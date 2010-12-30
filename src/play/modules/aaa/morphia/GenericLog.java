@@ -8,6 +8,7 @@ import play.modules.aaa.ILog;
 import play.modules.morphia.Model;
 
 import com.google.code.morphia.annotations.Id;
+import com.google.code.morphia.annotations.Indexed;
 import com.google.code.morphia.annotations.PostLoad;
 import com.google.code.morphia.annotations.PrePersist;
 import com.google.code.morphia.annotations.Transient;
@@ -19,12 +20,14 @@ public abstract class GenericLog extends Model implements ILog {
    private String msg_;
    
    @com.google.code.morphia.annotations.Property("lvl")
+   @Indexed
    private String lvl_;
    
    @com.google.code.morphia.annotations.Property("ts")
    private long ts_;
    
    @com.google.code.morphia.annotations.Property("ack")
+   @Indexed
    private boolean acknowledged_;
    
    @com.google.code.morphia.annotations.Property("p0")

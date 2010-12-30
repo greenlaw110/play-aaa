@@ -72,7 +72,7 @@ public class Account extends GenericAccount {
    }
    
    public static IAccount byName(String name) {
-      return Account.findById(name);
+      return null == name ? null : system().getName().equals(name) ? system() : Account.findById(name);
    }
    
    // --- implement Morphia Model factory methods

@@ -1,6 +1,8 @@
 package play.modules.aaa.utils;
 
 public interface ConfigConstants {
+   public static final String SYSTEM_PERMISSION_CHECK = "aaa.system-permission-check";
+   
    public static final String DISABLE = "aaa.disable";
    
    public static final String SYS_ACCOUNT = "aaa.account.system";

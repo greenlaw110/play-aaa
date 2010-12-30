@@ -1,5 +1,6 @@
 package play.modules.aaa.morphia;
 
+import java.lang.reflect.Type;
 import java.util.List;
 
 import play.Logger;
@@ -8,108 +9,139 @@ import play.modules.morphia.MorphiaPlugin;
 import play.mvc.Scope.Params;
 
 import com.google.code.morphia.annotations.Entity;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 
-@Entity(value="aaa_log", noClassnameStored=true)
+@Entity(value = "aaa_log", noClassnameStored = true)
 public class Log extends GenericLog {
-   
-   private static final long serialVersionUID = 3458850233968068149L;
 
-   Log() {}
-   
-   private Log(IAccount principal, String level, String message) {
-      super(principal, level, message);
-      if (null == message) throw new NullPointerException();
-   }
+    private static final long serialVersionUID = 3458850233968068149L;
 
-   @Override
-   public void log(String level, String message, Object... args) {
-      IAccount acc = null;
-      try {
-         acc = play.modules.aaa.utils.Factory.account().getCurrent();
-      } catch (Exception e) {
-         Logger.error(e, "error get context account instance");
-      }
-      log(acc, false, level, message, args);
-   }
+    Log() {
+    }
 
-   @Override
-   public void log(String level, boolean autoAck, String message, Object... args) {
-      IAccount acc = null;
-      try {
-         acc = play.modules.aaa.utils.Factory.account().getCurrent();
-      } catch (Exception e) {
-         Logger.error(e, "error get context account instance");
-      }
-      log(acc, autoAck, level, message, args);
-   }
+    public JsonSerializer getJsonSerializer() {
+        return new JsonSerializer<Log>() {
+            @Override
+            public JsonElement serialize(Log src, Type srcType,
+                    JsonSerializationContext ctx) {
+                JsonObject j = new JsonObject();
+                j.addProperty("id", src.getId().toString());
+                j.addProperty("level", src.getLevel());
+                j.addProperty("message", src.getMessage());
+                j.addProperty("timestamp", src.getTimestamp());
+                j.addProperty("principal", toStr_(src.getPrincipal()));
+                j.addProperty("acknowledger", toStr_(src.getAcknowledger()));
+                j.addProperty("acknowledged", src.acknowledged());
+                return j;
+            }
 
-   @Override
-   public void log(IAccount principal, boolean autoAck, String level, String message, Object... args) {
-      Log log = new Log(principal, level, String.format(message, args));
-      if (autoAck) log.acknowledge();
-      log.save();
-   }
+            private String toStr_(Object obj) {
+                return null == obj ? null : obj.toString();
+            }
+        };
+    }
 
-   // --- implement Morphia Model factory methods
-   protected static play.db.Model.Factory mf = MorphiaPlugin.MorphiaModelLoader.getFactory(Log.class);
-   public static play.db.Model.Factory getModelFactory() {
-      return mf;
-   }
+    private Log(IAccount principal, String level, String message) {
+        super(principal, level, message);
+        if (null == message)
+            throw new NullPointerException();
+    }
 
-   public static MorphiaQuery all() {
-      return createQuery();
-   }
+    @Override
+    public void log(String level, String message, Object... args) {
+        IAccount acc = null;
+        try {
+            acc = play.modules.aaa.utils.Factory.account().getCurrent();
+        } catch (Exception e) {
+            Logger.error(e, "error get context account instance");
+        }
+        log(acc, false, level, message, args);
+    }
 
-   public static Log create(String name, Params params) {
-      try {
-         return Log.class.newInstance().edit(name, params.all());
-      } catch (Exception e) {
-         throw new RuntimeException(e);
-      }
-   }
+    @Override
+    public void log(String level, boolean autoAck, String message,
+            Object... args) {
+        IAccount acc = null;
+        try {
+            acc = play.modules.aaa.utils.Factory.account().getCurrent();
+        } catch (Exception e) {
+            Logger.error(e, "error get context account instance");
+        }
+        log(acc, autoAck, level, message, args);
+    }
 
-   public static MorphiaQuery createQuery() {
-      return new play.modules.morphia.Model.MorphiaQuery(Log.class);
-   }
+    @Override
+    public void log(IAccount principal, boolean autoAck, String level,
+            String message, Object... args) {
+        Log log = new Log(principal, level, String.format(message, args));
+        if (autoAck)
+            log.acknowledge();
+        log.save();
+    }
 
-   public static long count() {
-      return all().count();
-   }
+    // --- implement Morphia Model factory methods
+    protected static play.db.Model.Factory mf = MorphiaPlugin.MorphiaModelLoader
+            .getFactory(Log.class);
 
-   public static long count(String keys, Object... params) {
-      return find(keys, params).count();
-   }
+    public static play.db.Model.Factory getModelFactory() {
+        return mf;
+    }
 
-   public static long deleteAll() {
-      return all().delete();
-   }
+    public static MorphiaQuery all() {
+        return createQuery();
+    }
 
-   public static MorphiaQuery find() {
-      return createQuery();
-   }
+    public static Log create(String name, Params params) {
+        try {
+            return Log.class.newInstance().edit(name, params.all());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-   public static MorphiaQuery find(String keys,
-         Object... params) {
-      return createQuery().findBy(keys.substring(2), params);
-   }
+    public static MorphiaQuery createQuery() {
+        return new play.modules.morphia.Model.MorphiaQuery(Log.class);
+    }
 
-   @SuppressWarnings("unchecked")
-   public static List<Log> findAll() {
-      return all().asList();
-   }
+    public static long count() {
+        return all().count();
+    }
 
-   @SuppressWarnings("unchecked")
-   public static Log findById(Object id) {
-      return filter("_id", id.toString()).get();
-   }
+    public static long count(String keys, Object... params) {
+        return find(keys, params).count();
+    }
 
-   public static MorphiaQuery filter(String property,
-         Object value) {
-      return find().filter(property, value);
-   }
+    public static long deleteAll() {
+        return all().delete();
+    }
 
-   @SuppressWarnings("unchecked")
-   public static Log get() {
-      return find().get();
-   }
+    public static MorphiaQuery find() {
+        return createQuery();
+    }
+
+    public static MorphiaQuery find(String keys, Object... params) {
+        return createQuery().findBy(keys.substring(2), params);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static List<Log> findAll() {
+        return all().asList();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Log findById(Object id) {
+        return filter("_id", id.toString()).get();
+    }
+
+    public static MorphiaQuery filter(String property, Object value) {
+        return find().filter(property, value);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Log get() {
+        return find().get();
+    }
 }
