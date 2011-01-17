@@ -29,6 +29,14 @@ public class Accounting {
       }
    }
    
+   public static void abort(String reason, String action, boolean allowSystem, Object... args) {
+       if (args.length > 0) {
+           action = String.format(action, args);
+       }
+       String msg = String.format("%1$s aborted: %2$s", action, reason);
+       log(allowSystem, false, "abort", msg);
+   }
+   
    public static void error(String reason, String action, boolean allowSystem) {
       error(reason, action, allowSystem, new Object[]{});
    }
@@ -53,6 +61,31 @@ public class Accounting {
       action = formatErrMsg_(e, action);
       log(allowSystem, false, "error", action);
    }
+
+   public static void fatal(String reason, String action, boolean allowSystem) {
+       fatal(reason, action, allowSystem, new Object[]{});
+    }
+    
+    public static void fatal(String reason, String action, boolean allowSystem, Object... args) {
+       if (args.length > 0) {
+          action = String.format(action, args);
+       }
+       action = formatErrMsg_(reason, action);
+       log(allowSystem, false, "fatal", action);
+    }
+
+    public static void fatal(Exception e, String action, boolean allowSystem) {
+        fatal(e, action, allowSystem, new Object[]{});
+    }
+    
+    public static void fatal(Exception e, String action, boolean allowSystem,
+          Object... args) {
+       if (args.length > 0) {
+          action = String.format(action, args);
+       }
+       action = formatErrMsg_(e, action);
+       log(allowSystem, false, "fatal", action);
+    }
 
    public static void warn(String reason, String action, boolean allowSystem) {
       warn(reason, action, allowSystem, new Object[] {});

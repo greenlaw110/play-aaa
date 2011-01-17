@@ -8,7 +8,7 @@ import java.util.Collection;
  * @author greenlaw110@gmail.com
  * @version 1.0 21/12/2010
  */
-public interface IAccount {
+public interface IAccount extends IDataTable, IAAAObject {
    /**
     * Return name of this account
     * @return

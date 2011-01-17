@@ -9,7 +9,7 @@ package play.modules.aaa;
  * @author greenlaw110
  * @version 1.0 21/12/2010
  */
-public interface IRight {
+public interface IRight extends IDataTable, IAAAObject {
    /**
     * Return the name of this right. Two rights are considered equals if the name
     * of the two are equal
@@ -19,8 +19,30 @@ public interface IRight {
    String getName();
    
    /**
-    * Factory method to create an new right instance with given name 
+    * Whether this right is dynamic. An example of dynamic right is a customer has
+    * right to access only orders owned by the customer, while order manager has 
+    * right to access all orders which is a static right.
     * 
+    * <p>In addition to normal {@link IAccount#hasAccessTo(IAuthorizeable) access check},
+    * dynamic right also require the {@link IDynamicRightChecker#hasAccess() dynamic right 
+    * check} to determine whether program should go or stop
+    * 
+    * @return true if this right is dynamic, false otherwise
+    */
+   boolean isDynamic();
+   
+   void setDynamic(boolean dynamic);
+   
+   /**
+    * Factory method to find an instance with given name 
+    * 
+    * @param name
+    * @return
+    */
+   IRight findByName(String name);
+   
+   /**
+    * Factory method to create a right instance
     * @param name
     * @return
     */

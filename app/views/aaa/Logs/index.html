@@ -1,0 +1,51 @@
+#{extends "main.html"/}
+
+#{set title:"Logs"/}
+
+#{css 'ul-table-common order-table panel-common utils pager'/}
+#{js 'ul-table-common utils order-model'/}
+
+<div id="order-list" class="ul-table order-table relative">
+#{ulheader 'Order No[class:no]|Customer|Address|Phone|Company|Description', className: 'relative f-left c-both' /}
+<ul class="body relative f-left c-both" data-bind='template: {name: "order-row-template", foreach: orders}'> </ul>
+<div class="pagerPanel relative f-left c-both">
+<ul class="pager relative center no-list-style">
+  <li data-bind="css: {disabled: page() == 1}"><img src="/img/first.gif" data-bind="click: first"></li>
+  <li data-bind="css: {disabled: page() == 1}"><img src="/img/prev.gif" data-bind="click: prev"></li>
+  <li data-bind="css: {disabled: !(page() < pageCount())}"><img src="/img/next.gif" data-bind="click: next"></li>
+  <li data-bind="css: {disabled: !(page() == pageCount())}"><img src="/img/last.gif" data-bind="click: last"></li>
+  <li>page <span><input name="page" data-bind="value: page()" size="1"></span>of <span data-bind="text: pageCount()"></span> pages</li>
+</ul>
+</div>
+</div>
+
+<script type="text/html" id="order-row-template">
+<li class="row clearfix">
+<ul class="row" data-bind="css:{exported: state() == 'EXPORTED', submitted: state() == 'SUBMITTED', received: state() == 'RECEIVED'}, click: orderModel.toggleShowItems">
+<li class="no" data-bind="text: no(), title: 'State: ' + state()"></li>
+<li class="customer" data-bind="text: customer.name()"></li>
+<li class="address" data-bind="text: customer.address(), title: customer.address()"></li>
+<li class="phone" data-bind="text: customer.phone()"></li>
+<li class="company" data-bind="text: customer.company(), title:customer.company()"></li>
+<li class="description" data-bind="text: description()"></li>
+</ul>
+<div class="detail-panel ul-table order-item-table shadow relative f-left c-both"  data-bind="slideVisible: orderModel.showItems(no())">
+#{ulheader 'Item No[class:no]|Description|Quantity|Supplier', className: 'relative f-left c-both'/}
+<ul class="body relative f-left c-both" data-bind='template: {name: "order-item-row-template", foreach: items}'> </ul>
+<ul class="action-panel relative f-left c-both">
+  <li><button class="submit-order" data-bind="visible: state() == 'EXPORTED'">Submit Order</button></li>
+</ul>
+</div>
+</li>
+</script>
+
+<script type="text/html" id="order-item-row-template">
+<li class="row">
+  <ul class="row">
+    <li class="no" data-bind="text:no()"></li>
+    <li class="description" data-bind="text:description()"></li>
+    <li class="quantity" data-bind="text:quantity"></li>
+    <li class="supplier" data-bind="text:supplier"></li>
+  </ul>
+</li>
+</script>

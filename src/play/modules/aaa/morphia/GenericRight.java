@@ -11,6 +11,9 @@ public abstract class GenericRight extends Model implements IRight {
    @Id
    private String name_;
    
+   @com.google.code.morphia.annotations.Property("dy")
+   private boolean isDynamic_;
+   
    // --- constructor ---
    GenericRight() {}
    protected GenericRight(String name) {
@@ -24,6 +27,16 @@ public abstract class GenericRight extends Model implements IRight {
       return name_;
    }
    
+   @Override
+   public boolean isDynamic(){
+       return isDynamic_;
+   }
+   
+   @Override
+   public void setDynamic(boolean dynamic) {
+       isDynamic_ = dynamic;
+   }
+   
    // --- morphia model contract for user defined Id entities
    @Override
    public Object getId() {
@@ -35,6 +48,6 @@ public abstract class GenericRight extends Model implements IRight {
    }
    protected static Object processId_(Object id) {
       return id.toString();
-   }   
+   }
 
 }

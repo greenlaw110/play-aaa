@@ -1,8 +1,12 @@
 package play.modules.aaa.morphia;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.bson.types.ObjectId;
+
 import play.Play;
+import play.modules.aaa.IAAAObject;
 import play.modules.aaa.IAccount;
 import play.modules.aaa.utils.ConfigConstants;
 import play.modules.morphia.MorphiaPlugin;
@@ -136,6 +140,52 @@ public class Account extends GenericAccount {
    @SuppressWarnings("unchecked")
    public static Account get() {
       return find().get();
+   }
+
+   @Override
+   public String _keyName() {
+       return "_id";
+   }
+
+   @Override
+   public Class<?> _keyType() {
+       return ObjectId.class;
+   }
+
+   @Override
+   public Object _keyValue(IAAAObject m) {
+       return getId();
+   }
+
+   @Override
+   public IAAAObject _findById(Object id) {
+       return Account.findById(id);
+   }
+
+   @Override
+   public List<IAAAObject> _fetch(int offset, int length, String orderBy,
+           String orderDirection, List<String> properties, String keywords,
+           String where) {
+       List<IAAAObject> l = new ArrayList<IAAAObject>();
+       for (play.db.Model m: Account.getModelFactory().fetch(offset, length, orderBy, orderDirection, properties, keywords, where)) {
+           l.add((Account)m);
+       }
+       return l;
+   }
+
+   @Override
+   public Long _count(List<String> properties, String keywords, String where) {
+       return Account.getModelFactory().count(properties, keywords, where);
+   }
+
+   @Override
+   public long _count() {
+       return Account.count();
+   }
+
+   @Override
+   public void _deleteAll() {
+       Account.deleteAll();
    }
 
 }

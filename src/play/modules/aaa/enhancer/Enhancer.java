@@ -15,6 +15,7 @@ import play.modules.aaa.IAuthorizeable;
 import play.modules.aaa.IPrivilege;
 import play.modules.aaa.IRight;
 import play.modules.aaa.NoAccessException;
+import play.modules.aaa.PlayDynamicRightChecker;
 import play.modules.aaa.RequireAccounting;
 import play.modules.aaa.RequirePrivilege;
 import play.modules.aaa.RequireRight;
@@ -24,171 +25,231 @@ import play.modules.aaa.utils.Factory;
 
 public class Enhancer extends play.classloading.enhancers.Enhancer {
 
-   @Override
-   public void enhanceThisClass(ApplicationClass applicationClass)
-         throws Exception {
-      enhance_(applicationClass, false);
-   }
+    @Override
+    public void enhanceThisClass(ApplicationClass applicationClass)
+            throws Exception {
+        enhance_(applicationClass, false);
+    }
 
-   private void enhance_(ApplicationClass applicationClass,
-         boolean buildAuthorityRegistryOnly) throws Exception {
-      CtClass ctClass = makeClass(applicationClass);
-      for (final CtMethod ctMethod : ctClass.getDeclaredMethods()) {
-         if (!Modifier.isPublic(ctMethod.getModifiers())) {
-            continue;
-         }
+    private void enhance_(ApplicationClass applicationClass,
+            boolean buildAuthorityRegistryOnly) throws Exception {
+        CtClass ctClass = makeClass(applicationClass);
+        for (final CtMethod ctMethod : ctClass.getDeclaredMethods()) {
+            if (!Modifier.isPublic(ctMethod.getModifiers())) {
+                continue;
+            }
 
-         boolean needsEnhance = false;
-         RequireRight rr = null;
-         RequirePrivilege rp = null;
-         RequireAccounting ra = null;
-         boolean allowSystem = false;
-         Object[] aa = ctMethod.getAnnotations();
-         for (Object o : aa) {
-            if (o instanceof RequirePrivilege) {
-               needsEnhance = true;
-               rp = (RequirePrivilege) o;
-               continue;
+            boolean needsEnhance = false;
+            RequireRight rr = null;
+            RequirePrivilege rp = null;
+            RequireAccounting ra = null;
+            boolean allowSystem = false;
+            Object[] aa = ctMethod.getAnnotations();
+            for (Object o : aa) {
+                if (o instanceof RequirePrivilege) {
+                    needsEnhance = true;
+                    rp = (RequirePrivilege) o;
+                    continue;
+                }
+                if (o instanceof RequireRight) {
+                    needsEnhance = true;
+                    rr = (RequireRight) o;
+                    continue;
+                }
+                if (o instanceof AllowSystemAccount) {
+                    allowSystem = true;
+                    continue;
+                }
+                if (o instanceof RequireAccounting) {
+                    needsEnhance = true;
+                    ra = (RequireAccounting) o;
+                }
             }
-            if (o instanceof RequireRight) {
-               needsEnhance = true;
-               rr = (RequireRight) o;
-               continue;
-            }
-            if (o instanceof AllowSystemAccount) {
-               allowSystem = true;
-               continue;
-            }
-            if (o instanceof RequireAccounting) {
-               needsEnhance = true;
-               ra = (RequireAccounting) o;
-            }
-         }
-         if (!needsEnhance)
-            return;
+            if (!needsEnhance)
+                return;
 
-         String key = ctMethod.getLongName();
-         IRight r = rr == null ? null : AnnotationHelper.getRequiredRight(rr,
-               key);
-         IPrivilege p = rp == null ? null : AnnotationHelper
-               .getRequiredPrivilege(rp, key);
-
-         if (r == null && p == null) {
-            throw new RuntimeException(
-                  "Invalid AAA annotation found: neither privilege nor right could be identified");
-         }
-         Authority.registAuthoriable(key, r, p);
-         if (!buildAuthorityRegistryOnly) {
-            ctMethod
-                  .insertBefore("play.modules.aaa.enhancer.Enhancer.Authority.checkPermission(\""
+            String key = ctMethod.getLongName();
+            Authority.registAuthoriable_(key, rr, rp);
+            if (!buildAuthorityRegistryOnly) {
+                ctMethod.insertBefore("play.modules.aaa.enhancer.Enhancer.Authority.checkPermission(\""
                         + key + "\", " + Boolean.toString(allowSystem) + ");");
-            if (null != ra) {
-               String msg = ra.value();
-               if (null == msg || "".equals(msg))
-                  msg = key;
-               ctMethod
-                     .insertBefore("play.modules.aaa.utils.Accounting.info(\""
-                           + msg + "\", " + Boolean.toString(allowSystem)
-                           + ", $$);");
-               CtClass etype = ClassPool.getDefault()
-                     .get("java.lang.Exception");
-               ctMethod.addCatch(
-                     "{play.modules.aaa.utils.Accounting.error($e, \"" + msg
-                           + "\", " + Boolean.toString(allowSystem)
-                           + ", $$); throw $e;}", etype);
+                if (null != ra) {
+                    String msg = ra.value();
+                    if (null == msg || "".equals(msg))
+                        msg = key;
+                    ctMethod.insertBefore("play.modules.aaa.utils.Accounting.info(\""
+                            + msg
+                            + "\", "
+                            + Boolean.toString(allowSystem)
+                            + ", $$);");
+                    CtClass etype = ClassPool.getDefault().get(
+                            "java.lang.Exception");
+                    ctMethod.addCatch(
+                            "{play.modules.aaa.utils.Accounting.error($e, \""
+                                    + msg + "\", "
+                                    + Boolean.toString(allowSystem)
+                                    + ", $$); throw $e;}", etype);
+                }
             }
-         }
-      }
-      if (!buildAuthorityRegistryOnly) {
-         applicationClass.enhancedByteCode = ctClass.toBytecode();
-         ctClass.detach();
-      }
-   }
+        }
+        if (!buildAuthorityRegistryOnly) {
+            applicationClass.enhancedByteCode = ctClass.toBytecode();
+            ctClass.detach();
+        }
+    }
 
-   public void buildAuthorityRegistry() throws Exception {
-      if (Authority.reg_.size() > 0)
-         return; // suppose it's already built up during code enhancement
-
-      for (ApplicationClass ac : Play.classes.all()) {
-         enhance_(ac, true);
-      }
-   }
-
-   public static class Authority implements IAuthorizeable {
-
-      private IRight r_ = null;
-      private IPrivilege p_ = null;
-
-      private Authority(IRight r, IPrivilege p) {
-         if (null == r && null == p) {
-            throw new IllegalArgumentException(
-                  "at least one of right and privilege should be non-null value");
-         }
-         r_ = r;
-         p_ = p;
-      }
-
-      @Override
-      public IRight getRequiredRight() {
-         return r_;
-      }
-
-      @Override
-      public IPrivilege getRequiredPrivilege() {
-         return p_;
-      }
-
-      private static final Map<String, IAuthorizeable> reg_ = new HashMap<String, IAuthorizeable>();
-
-      private static void registAuthoriable(String key, IRight r, IPrivilege p) {
-         reg_.put(key, new Authority(r, p));
-      }
-
-      public static IAuthorizeable getRight(String key) {
-         return reg_.get(key);
-      }
-
-      public static void checkPermission(String key, boolean allowSystem)
-            throws NoAccessException {
-         if (Play.mode == Play.Mode.DEV) {
-            if (Boolean.parseBoolean(Play.configuration.getProperty(
-                  ConfigConstants.DISABLE, "false"))) {
-               return;
+    public void buildAuthorityRegistry() throws Exception {
+        if (Authority.reg_.size() < 0) {
+            // force build authority registry
+            for (ApplicationClass ac : Play.classes.all()) {
+                enhance_(ac, true);
             }
-         }
+        }
+        Authority.ensureRightPrivilege();
+    }
 
-         IAuthorizeable a = reg_.get(key);
-         if (null == a) {
-            throw new RuntimeException(
-                  "oops, something wrong with enhancer... ?");
-         }
-         IAccount acc = null;
-         try {
-            IAccount accFact = Factory.account();
-            acc = accFact.getCurrent();
-            if (null == acc) {
-               if (allowSystem) {
-                  if (!Boolean.parseBoolean(Play.configuration.getProperty(ConfigConstants.SYSTEM_PERMISSION_CHECK, "false"))) {
-                     // suppress permission check for system account
-                     return;
-                  }
-                  acc = accFact.getSystemAccount();
-               }
-               if (null == acc) {
-                  throw new NoAccessException(
-                        "cannot determine principal account");
-               }
+    public static class Authority implements IAuthorizeable {
+
+        private IRight r_ = null;
+        private IPrivilege p_ = null;
+
+        private RequireRight rr_ = null;
+        private RequirePrivilege rp_ = null;
+        private String key_;
+
+        private Authority(String key, RequireRight rr, RequirePrivilege rp) {
+            rr_ = rr;
+            rp_ = rp;
+            key_ = key;
+        }
+
+        public void validate() {
+            IRight r = getRequiredRight();
+            IPrivilege p = getRequiredPrivilege();
+            if (r == null && p == null) {
+                throw new RuntimeException(
+                        "Invalid AAA annotation found: neither privilege nor right could be identified for "
+                                + key_);
+            }
+        }
+
+        @Override
+        public IRight getRequiredRight() {
+            if (null == rr_)
+                return null;
+            if (null == r_) {
+                r_ = AnnotationHelper.getRequiredRight(rr_, key_);
+            }
+            return r_;
+        }
+
+        @Override
+        public IPrivilege getRequiredPrivilege() {
+            if (null == rp_)
+                return null;
+            if (null == p_) {
+                p_ = AnnotationHelper.getRequiredPrivilege(rp_, key_);
+            }
+            return p_;
+        }
+
+        private static final Map<String, Authority> reg_ = new HashMap<String, Authority>();
+
+        private static void registAuthoriable_(String key, RequireRight rr,
+                RequirePrivilege rp) {
+            reg_.put(key, new Authority(key, rr, rp));
+        }
+
+        public static IAuthorizeable getRight(String key) {
+            return reg_.get(key);
+        }
+
+        public static void ensureRightPrivilege() {
+            IRight rightFact = Factory.right();
+            IPrivilege privFact = Factory.privilege();
+            for (Authority a : reg_.values()) {
+                RequireRight rr = a.rr_;
+                IRight r = a.r_;
+                if (rr != null && r == null) {
+                    String s = rr.value();
+                    if (null == s)
+                        throw new NullPointerException(
+                                "Null RequireRight found for " + a.key_);
+                    if (s.startsWith("aaa"))
+                        s = Play.configuration.getProperty(s);
+                    r = rightFact.findByName(s);
+                    if (null == r) {
+                        r = rightFact.create(s);
+                        r._save();
+                    }
+                    a.r_ = r;
+                }
+
+                RequirePrivilege rp = a.rp_;
+                IPrivilege p = a.p_;
+                if (rp != null && p == null) {
+                    String s = rp.value();
+                    if (null == s)
+                        throw new NullPointerException(
+                                "Null RequirePrivilege found for " + a.key_);
+                    if (s.startsWith("aaa"))
+                        s = Play.configuration.getProperty(s);
+                    p = privFact.findByName(s);
+                    if (null == p) {
+                        p = privFact.create(s, 0);
+                        p._save();
+                    }
+                    a.p_ = p;
+                }
+            }
+        }
+
+        public static void checkPermission(String key, boolean allowSystem)
+                throws NoAccessException {
+            if (Play.mode == Play.Mode.DEV) {
+                if (Boolean.parseBoolean(Play.configuration.getProperty(
+                        ConfigConstants.DISABLE, "false"))) {
+                    return;
+                }
             }
 
-            if (!acc.hasAccessTo(a)) {
-               throw new NoAccessException("no permission");
+            IAuthorizeable a = reg_.get(key);
+            if (null == a) {
+                throw new RuntimeException(
+                        "oops, something wrong with enhancer... ?");
             }
-         } catch (NoAccessException nae) {
-            throw nae;
-         } catch (Exception e) {
-            throw new NoAccessException(e);
-         }
+            IAccount acc = null;
+            try {
+                IAccount accFact = Factory.account();
+                acc = accFact.getCurrent();
+                if (null == acc) {
+                    if (allowSystem) {
+                        if (!Boolean
+                                .parseBoolean(Play.configuration
+                                        .getProperty(
+                                                ConfigConstants.SYSTEM_PERMISSION_CHECK,
+                                                "false"))) {
+                            // suppress permission check for system account
+                            return;
+                        }
+                        acc = accFact.getSystemAccount();
+                    }
+                    if (null == acc) {
+                        throw new NoAccessException(
+                                "cannot determine principal account");
+                    }
+                }
 
-      }
-   }
+                if (!acc.hasAccessTo(a)
+                        || (a.getRequiredRight().isDynamic() && !PlayDynamicRightChecker
+                                ._hasAccess())) {
+                    throw new NoAccessException("no permission");
+                }
+            } catch (NoAccessException nae) {
+                throw nae;
+            } catch (Exception e) {
+                throw new NoAccessException(e);
+            }
+        }
+    }
 }

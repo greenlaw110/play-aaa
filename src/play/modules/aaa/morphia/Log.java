@@ -1,9 +1,13 @@
 package play.modules.aaa.morphia;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.bson.types.ObjectId;
+
 import play.Logger;
+import play.modules.aaa.IAAAObject;
 import play.modules.aaa.IAccount;
 import play.modules.morphia.MorphiaPlugin;
 import play.mvc.Scope.Params;
@@ -22,7 +26,7 @@ public class Log extends GenericLog {
     Log() {
     }
 
-    public JsonSerializer getJsonSerializer() {
+    public JsonSerializer<?> getJsonSerializer() {
         return new JsonSerializer<Log>() {
             @Override
             public JsonElement serialize(Log src, Type srcType,
@@ -76,6 +80,7 @@ public class Log extends GenericLog {
     @Override
     public void log(IAccount principal, boolean autoAck, String level,
             String message, Object... args) {
+        sysLog().log(principal, autoAck, level, message, args);
         Log log = new Log(principal, level, String.format(message, args));
         if (autoAck)
             log.acknowledge();
@@ -143,5 +148,51 @@ public class Log extends GenericLog {
     @SuppressWarnings("unchecked")
     public static Log get() {
         return find().get();
+    }
+
+    @Override
+    public String _keyName() {
+        return "_id";
+    }
+
+    @Override
+    public Class<?> _keyType() {
+        return ObjectId.class;
+    }
+
+    @Override
+    public Object _keyValue(IAAAObject m) {
+        return getId();
+    }
+
+    @Override
+    public IAAAObject _findById(Object id) {
+        return Log.findById(id);
+    }
+
+    @Override
+    public List<IAAAObject> _fetch(int offset, int length, String orderBy,
+            String orderDirection, List<String> properties, String keywords,
+            String where) {
+        List<IAAAObject> l = new ArrayList<IAAAObject>();
+        for (play.db.Model m: Log.getModelFactory().fetch(offset, length, orderBy, orderDirection, properties, keywords, where)) {
+            l.add((Log)m);
+        }
+        return l;
+    }
+
+    @Override
+    public Long _count(List<String> properties, String keywords, String where) {
+        return Log.getModelFactory().count(properties, keywords, where);
+    }
+
+    @Override
+    public long _count() {
+        return Log.count();
+    }
+
+    @Override
+    public void _deleteAll() {
+        Log.deleteAll();
     }
 }

@@ -2,7 +2,7 @@ package play.modules.aaa;
 
 import com.google.gson.JsonSerializer;
 
-public interface ILog {
+public interface ILog extends IAAAObject, IDataTable, ILogService {
 
     Object getId();
     
@@ -56,12 +56,15 @@ public interface ILog {
      * @param message
      * @param args
      */
+    @Override
     void log(IAccount principal, boolean autoAck, String level, String message,
             Object... args);
 
+    void registerSysLogHanlder(ILogService sysLog);
+    
     /**
      * Factory method to return JsonSerializer for this type
      * @return
      */
-    JsonSerializer getJsonSerializer();
+    JsonSerializer<?> getJsonSerializer();
 }

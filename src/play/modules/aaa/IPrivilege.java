@@ -13,7 +13,7 @@ package play.modules.aaa;
  * @author greenlaw110
  * @version 1.0 21/12/2010
  */
-public interface IPrivilege extends Comparable<IPrivilege> {
+public interface IPrivilege extends Comparable<IPrivilege>, IDataTable, IAAAObject {
    String getName();
    int getLevel();
    

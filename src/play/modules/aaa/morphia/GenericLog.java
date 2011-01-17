@@ -5,6 +5,8 @@ import org.bson.types.ObjectId;
 import play.Logger;
 import play.modules.aaa.IAccount;
 import play.modules.aaa.ILog;
+import play.modules.aaa.ILogService;
+import play.modules.aaa.PlayLogService;
 import play.modules.morphia.Model;
 
 import com.google.code.morphia.annotations.Id;
@@ -113,6 +115,18 @@ public abstract class GenericLog extends Model implements ILog {
    @Override
    public IAccount getAcknowledger() {
 	   return acknowledger_;
+   }
+   
+   private static ILogService sysLog_ = PlayLogService.get();
+   protected ILogService sysLog() {
+       return sysLog_;
+   }
+   public void registerSysLogHanlder(ILogService logService) {
+       if (null != logService) {
+           sysLog_ = logService;
+       } else {
+           Logger.warn("null sys log found");
+       }
    }
 
    // --- morphia model contract for user defined Id entities
