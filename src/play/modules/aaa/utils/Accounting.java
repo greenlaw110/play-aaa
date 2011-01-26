@@ -61,6 +61,13 @@ public class Accounting {
       action = formatErrMsg_(e, action);
       log(allowSystem, false, "error", action);
    }
+   
+   // for enhancer
+   public static void error(Exception e, String action, boolean allowSystem, String s1, String s2) {
+       action = String.format(action, s1, s2);
+       action = formatErrMsg_(e, action);
+       log(allowSystem, false, "error", action);
+   }
 
    public static void fatal(String reason, String action, boolean allowSystem) {
        fatal(reason, action, allowSystem, new Object[]{});
@@ -118,6 +125,10 @@ public class Accounting {
 
    public static void info(String msg, boolean allowSystem, Object... args) {
       log(allowSystem, true, "info", msg, args);
+   }
+   
+   public static void info(String msg, boolean allowSystem, String str1, String str2) {
+       log(allowSystem, true, "info", msg, str1, str2);
    }
    
    private static String formatErrMsg_(String reason, String action) {
