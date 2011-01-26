@@ -63,8 +63,22 @@ public class Accounting {
    }
    
    // for enhancer
-   public static void error(Exception e, String action, boolean allowSystem, String s1, String s2) {
+   public static void error(Exception e, String action, boolean allowSystem, Object s1, Object s2) {
        action = String.format(action, s1, s2);
+       action = formatErrMsg_(e, action);
+       log(allowSystem, false, "error", action);
+   }
+
+   // for enhancer
+   public static void error(Exception e, String action, boolean allowSystem, Object s1, Object s2, Object s3) {
+       action = String.format(action, s1, s2, s3);
+       action = formatErrMsg_(e, action);
+       log(allowSystem, false, "error", action);
+   }
+
+   // for enhancer
+   public static void error(Exception e, String action, boolean allowSystem, Object s1, Object s2, Object s3, Object s4) {
+       action = String.format(action, s1, s2, s3, s4);
        action = formatErrMsg_(e, action);
        log(allowSystem, false, "error", action);
    }
@@ -129,6 +143,14 @@ public class Accounting {
    
    public static void info(String msg, boolean allowSystem, String str1, String str2) {
        log(allowSystem, true, "info", msg, str1, str2);
+   }
+   
+   public static void info(String msg, boolean allowSystem, String s1, String s2, String s3) {
+       log(allowSystem, true, "info", msg, s1, s2, s3);
+   }
+   
+   public static void info(String msg, boolean allowSystem, String s1, String s2, String s3, String s4) {
+       log(allowSystem, true, "info", msg, s1, s2, s3, s4);
    }
    
    private static String formatErrMsg_(String reason, String action) {
