@@ -6,6 +6,7 @@ import java.util.List;
 import play.modules.aaa.IAAAObject;
 import play.modules.aaa.ILog;
 import play.modules.aaa.utils.Factory;
+import play.mvc.Router;
 
 public class Logs extends AAAController {
     public static void index() {
@@ -26,12 +27,13 @@ public class Logs extends AAAController {
                 : 0));
         List<IAAAObject> logs = fact._fetch((page - 1) * pageSize, pageSize,
                 orderBy, order, l, search, null);
+        
+        String fetchUrl = Router.reverse("aaa.Logs.list").url;
 
         if (request.isAjax()) {
-            renderJSON2(fact.getJsonSerializer(), logs, page, count,
-                    totalCount, pageCount, pageSize);
+            renderJSON2(fact.getJsonSerializer(), logs, page, count, totalCount, pageCount, pageSize, search, fetchUrl);
         } else {
-            render(logs, page, count, totalCount, pageCount, pageSize);
+            index();
         }
     }
 }
