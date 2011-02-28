@@ -2,7 +2,10 @@ package play.modules.aaa.morphia;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.bson.types.ObjectId;
 
@@ -87,6 +90,23 @@ public class Log extends GenericLog {
         log.save();
     }
 
+    @Override
+    public Set<String> levels() {
+    	//TODO get list from database
+    	String[] levels = {"info", "error", "warn", "fatal"};
+    	return new HashSet<String>(Arrays.asList(levels));
+    };
+    
+    @Override
+    public String levelFieldName() {
+    	return "lvl";
+    }
+    
+    @Override
+    public String acknowledgeFieldName() {
+    	return "ack";
+    }
+
     // --- implement Morphia Model factory methods
     protected static play.db.Model.Factory mf = MorphiaPlugin.MorphiaModelLoader
             .getFactory(Log.class);
@@ -138,7 +158,8 @@ public class Log extends GenericLog {
 
     @SuppressWarnings("unchecked")
     public static Log findById(Object id) {
-        return filter("_id", id.toString()).get();
+    	ObjectId oid = (id instanceof ObjectId) ? (ObjectId)id : new ObjectId(id.toString());
+        return filter("_id", oid).get();
     }
 
     public static MorphiaQuery filter(String property, Object value) {
@@ -175,8 +196,9 @@ public class Log extends GenericLog {
             String orderDirection, List<String> properties, String keywords,
             String where) {
         List<IAAAObject> l = new ArrayList<IAAAObject>();
-        for (play.db.Model m: Log.getModelFactory().fetch(offset, length, orderBy, orderDirection, properties, keywords, where)) {
-            l.add((Log)m);
+        for (play.db.Model m : Log.getModelFactory().fetch(offset, length,
+                orderBy, orderDirection, properties, keywords, where)) {
+            l.add((Log) m);
         }
         return l;
     }

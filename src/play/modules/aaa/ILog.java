@@ -1,11 +1,13 @@
 package play.modules.aaa;
 
+import java.util.Set;
+
 import com.google.gson.JsonSerializer;
 
 public interface ILog extends IAAAObject, IDataTable, ILogService {
 
     Object getId();
-    
+
     String getLevel();
 
     String getMessage();
@@ -61,10 +63,34 @@ public interface ILog extends IAAAObject, IDataTable, ILogService {
             Object... args);
 
     void registerSysLogHanlder(ILogService sysLog);
-    
+
     /**
      * Factory method to return JsonSerializer for this type
+     * 
      * @return
      */
     JsonSerializer<?> getJsonSerializer();
+    
+    /**
+     * Return the field name to store level information.
+     * 
+     * <p>Along with {@link #levels()} method to provide information
+     * to build level Filter
+     * @return
+     */
+    String levelFieldName();
+    
+    /**
+     * Return the field name to store acknowledge information
+     * 
+     * @return
+     */
+    String acknowledgeFieldName();
+
+    /**
+     * Return a unique set of level string from all logs
+     * @return
+     */
+    Set<String> levels();
+
 }
