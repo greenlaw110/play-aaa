@@ -1,5 +1,9 @@
 package play.modules.aaa.morphia;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.bson.types.ObjectId;
 
 import play.Logger;
@@ -115,6 +119,28 @@ public abstract class GenericLog extends Model implements ILog {
    @Override
    public IAccount getAcknowledger() {
 	   return acknowledger_;
+   }
+   
+   @Override
+   public Set<String> levels() {
+   	//TODO get list from database
+   	String[] levels = {"info", "error", "warn", "fatal"};
+   	return new HashSet<String>(Arrays.asList(levels));
+   };
+   
+   @Override
+   public String levelFieldName() {
+   	return "lvl";
+   }
+   
+   @Override
+   public String acknowledgeFieldName() {
+   	return "ack";
+   }
+
+   @Override
+   public String timeStampFieldName() {
+	   return "ts";
    }
    
    private static ILogService sysLog_ = PlayLogService.get();

@@ -11,8 +11,8 @@ import play.modules.aaa.utils.Factory;
 import play.mvc.Router;
 
 public class Logs extends AAAController {
-    public static void index() {
-        render();
+    private static void list_() {
+    	redirect(Router.reverse("aaa.Logs.list").url);
     }
     
     private static Filter levelFilter_(ILog logFact) {
@@ -32,13 +32,20 @@ public class Logs extends AAAController {
     	return f;
     }
 
-    public static void list(int page, String order, String orderBy,
+    public static void list(int page, String sort, String sortBy,
             String search, List<Filter> filters) throws Exception {
+    	if (!request.isAjax()) {
+    		render();
+    	}
         if (page < 1)
             page = 1;
         ILog fact = Factory.log();
         List<String> l = new ArrayList<String>();
         search = "null".equals(search) ? null : search;
+    	if (sortBy == null) {
+    		sortBy = fact.timeStampFieldName();
+    		sort = "DESC";
+    	}
         if (null == filters) {
             filters = new ArrayList<Filter>();
             filters.add(levelFilter_(fact));
@@ -49,17 +56,14 @@ public class Logs extends AAAController {
         int pageSize = getPageSize();
         long pageCount = ((count / pageSize) + (((count % pageSize) > 0) ? 1
                 : 0));
+        if (page > pageCount) page = 1;
         List<IAAAObject> logs = fact._fetch((page - 1) * pageSize, pageSize,
-                orderBy, order, l, search, Filter.toString(filters));
+                sortBy, sort, l, search, Filter.toString(filters));
 
         String fetchUrl = Router.reverse("aaa.Logs.list").url;
 
-        if (request.isAjax()) {
-            renderJSON2(fact.getJsonSerializer(), logs, page, count,
-                    totalCount, pageCount, pageSize, search, fetchUrl, filters);
-        } else {
-            index();
-        }
+        renderJSON2(fact.getJsonSerializer(), logs, page, count,
+                totalCount, pageCount, pageSize, search, sort, sortBy, fetchUrl, filters);
     }
     
     public static void acknowledge(String id) throws Exception {

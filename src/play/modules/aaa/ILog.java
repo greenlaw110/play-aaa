@@ -86,6 +86,13 @@ public interface ILog extends IAAAObject, IDataTable, ILogService {
      * @return
      */
     String acknowledgeFieldName();
+    
+    /**
+     * Return the field name to store timestamp
+     * 
+     * @return
+     */
+    String timeStampFieldName();
 
     /**
      * Return a unique set of level string from all logs

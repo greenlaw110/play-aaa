@@ -2,10 +2,7 @@ package play.modules.aaa.morphia;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.bson.types.ObjectId;
 
@@ -88,23 +85,6 @@ public class Log extends GenericLog {
         if (autoAck)
             log.acknowledge();
         log.save();
-    }
-
-    @Override
-    public Set<String> levels() {
-    	//TODO get list from database
-    	String[] levels = {"info", "error", "warn", "fatal"};
-    	return new HashSet<String>(Arrays.asList(levels));
-    };
-    
-    @Override
-    public String levelFieldName() {
-    	return "lvl";
-    }
-    
-    @Override
-    public String acknowledgeFieldName() {
-    	return "ack";
     }
 
     // --- implement Morphia Model factory methods
