@@ -17,4 +17,8 @@ public interface ConfigConstants {
    public static final String ROLE_IMPL = "aaa.impl.role";
    public static final String RIGHT_IMPL = "aaa.impl.right";
    public static final String LOG_IMPL = "aaa.impl.log";
+   public static final String AUTHENTICATOR_IMPL = "aaa.impl.authenticator";
+
+   public static final String AUTHENTICATE_PROVIDER_URL = "aaa.authenticate.server";
+   public static final String AUTHENTICATE_METHOD = "aaa.authentication.method";
 }

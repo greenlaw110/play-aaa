@@ -136,6 +136,11 @@ public class Right extends GenericRight {
     public long _count() {
         return count();
     }
+    
+    @Override
+    public void _delete() {
+    	
+    }
 
     @Override
     public void _deleteAll() {

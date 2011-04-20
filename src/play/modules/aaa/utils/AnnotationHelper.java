@@ -1,11 +1,9 @@
 package play.modules.aaa.utils;
 
 import java.lang.reflect.Method;
-import java.util.List;
 
 import play.Logger;
 import play.Play;
-import play.modules.aaa.IAAAObject;
 import play.modules.aaa.IPrivilege;
 import play.modules.aaa.IRight;
 import play.modules.aaa.RequirePrivilege;
