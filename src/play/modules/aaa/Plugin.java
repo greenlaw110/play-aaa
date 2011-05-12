@@ -9,6 +9,7 @@ import play.db.jpa.JPAPlugin;
 import play.exceptions.UnexpectedException;
 import play.modules.aaa.enhancer.Enhancer;
 import play.modules.aaa.utils.ConfigConstants;
+import play.modules.aaa.utils.ConfigurationAuthenticator;
 
 /**
  * <code>play.module.aaa.Plugin</code> provides off the shelf framework for
@@ -50,6 +51,7 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
     		  throw new UnexpectedException(e);
     	  }
       }
+      new ConfigurationAuthenticator.BootLoader().doJob();
       Logger.info(msg_("initialized"));
    }
 
