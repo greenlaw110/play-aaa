@@ -11,6 +11,7 @@ import play.modules.aaa.IAAAObject;
 import play.modules.aaa.IAccount;
 import play.modules.aaa.IAuthenticator;
 import play.modules.aaa.utils.ConfigConstants;
+import play.modules.aaa.utils.ConfigurationAuthenticator;
 import play.modules.aaa.utils.LdapAuthenticator;
 import play.modules.morphia.MorphiaPlugin;
 import play.mvc.Scope.Params;
@@ -51,6 +52,8 @@ public class Account extends GenericAccount {
 		if (null != authImpl) {
 			if (authImpl.equalsIgnoreCase("ldap")) {
 				auth = new LdapAuthenticator();
+			} else if (authImpl.equalsIgnoreCase("appconf")) {
+			    auth = new ConfigurationAuthenticator();
 			} else {
 				try {
 					auth = (IAuthenticator) Class.forName(authImpl)
