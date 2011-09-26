@@ -14,7 +14,7 @@ public class Accounting {
             String action, Object... args) {
         IAccount acc = null;
         try {
-            IAccount accFact = Factory.account();
+            IAccount accFact = AAAFactory.account();
             acc = accFact.getCurrent();
             if (null == acc && allowSystem) {
                 acc = accFact.getSystemAccount();
@@ -23,7 +23,7 @@ public class Accounting {
             Logger.error(e, "Error get principal");
         }
         try {
-            Factory.log().log(acc, autoAck, level, action, args);
+            AAAFactory.log().log(acc, autoAck, level, action, args);
         } catch (Exception e) {
             Logger.error(e, "error get Log implementation");
         }

@@ -14,12 +14,15 @@ import play.modules.aaa.utils.ConfigConstants;
 import play.modules.aaa.utils.ConfigurationAuthenticator;
 import play.modules.aaa.utils.LdapAuthenticator;
 import play.modules.morphia.MorphiaPlugin;
+import play.mvc.Http.Request;
 import play.mvc.Scope.Params;
 
 import com.google.code.morphia.annotations.Entity;
 
 @Entity("aaa_account")
 public class Account extends GenericAccount {
+    
+    public static final String KEY = "__AAA_ACCOUNT__";
 
 	private static final long serialVersionUID = -5243110444838677957L;
 
@@ -36,8 +39,6 @@ public class Account extends GenericAccount {
 	 */
 	Account() {
 	}
-
-	private static ThreadLocal<IAccount> cur_ = new ThreadLocal<IAccount>();
 
 	@Override
 	public IAccount authenticate(String name, String password) {
@@ -79,7 +80,10 @@ public class Account extends GenericAccount {
 					passwordHash(name, password)).get();
 		}
 
-		cur_.set(account);
+		Request req = Request.current();
+		if (null != req) {
+		    if (null == account) req.args.remove(KEY); else req.args.put(KEY, account); 
+		}
 		return account;
 	}
 
@@ -87,9 +91,18 @@ public class Account extends GenericAccount {
 	public IAccount getCurrent() {
 		return current();
 	}
+	
+	@Override
+	public void setCurrent(IAccount account) {
+	    Request req = Request.current();
+	    if (null == req) throw new IllegalStateException("No current request found");
+	    if (null == account) req.args.remove(KEY);
+	    req.args.put(KEY, account);
+	}
 
 	public static IAccount current() {
-		return cur_.get();
+		Request req = Request.current();
+		return null == req ? null : (IAccount)req.args.get(KEY);
 	}
 
 	@Override
@@ -230,5 +243,10 @@ public class Account extends GenericAccount {
 	public void _deleteAll() {
 		Account.deleteAll();
 	}
+
+    @Override
+    public IAccount create(String name) {
+        return new Account(name);
+    }
 
 }

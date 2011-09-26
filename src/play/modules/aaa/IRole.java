@@ -2,8 +2,6 @@ package play.modules.aaa;
 
 import java.util.Collection;
 
-import play.modules.aaa.morphia.Right;
-
 /**
  * A <code>IRole</code> represent a group of @{link IRight} and can be granted to
  * an {@link IAccount}
@@ -12,7 +10,7 @@ import play.modules.aaa.morphia.Right;
  * @version 1.0 21/12/2010
  *
  */
-public interface IRole {
+public interface IRole extends IDataTable, IAAAObject {
    String getName();
    
    Collection<IRight> getRights();
@@ -22,12 +20,20 @@ public interface IRole {
     * @param right
     * @return
     */
-   IRole addRight(Right right);
+   IRole addRight(IRight right);
    
    /**
     * Remove a right from this role and return this role
     * @param right
     * @return
     */
-   IRole removeRight(Right right);
+   IRole removeRight(IRight right);
+
+   
+   /**
+    * Factory method to create a right instance
+    * @param name
+    * @return
+    */
+   IRole create(String name);
 }

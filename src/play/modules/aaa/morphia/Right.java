@@ -138,11 +138,6 @@ public class Right extends GenericRight {
     }
     
     @Override
-    public void _delete() {
-    	
-    }
-
-    @Override
     public void _deleteAll() {
         deleteAll();
     }

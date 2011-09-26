@@ -6,8 +6,9 @@ import play.modules.aaa.IAccount;
 import play.modules.aaa.ILog;
 import play.modules.aaa.IPrivilege;
 import play.modules.aaa.IRight;
+import play.modules.aaa.IRole;
 
-public class Factory implements ConfigConstants {
+public class AAAFactory implements ConfigConstants {
     private static IAccount acc_ = null;
 
     public static IAccount account() {
@@ -35,6 +36,34 @@ public class Factory implements ConfigConstants {
             }
         }
         return acc_;
+    }
+    
+    private static IRole role_ = null;
+    public static IRole role() {
+        if (null == role_) {
+            String cn = Play.configuration.getProperty(ROLE_IMPL);
+            if (null != cn) {
+                try {
+                    Class<?> c = Class.forName(cn);
+                    role_ = (IRole) c.newInstance();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                String impl = Play.configuration.getProperty(AAA_IMPL);
+                if (null == impl) {
+                    Logger.warn("No configuration for role implementation found, use default morphia impl");
+                    impl = AAA_IMPL_MORPHIA;
+                }
+                if (AAA_IMPL_MORPHIA.equals(impl)) {
+                    role_ = play.modules.aaa.morphia.Factory.role();
+                } else {
+                    throw new RuntimeException(
+                            "AAA implementation not supported: " + impl);
+                }
+            }
+        }
+        return role_;
     }
 
     private static IRight right_ = null;

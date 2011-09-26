@@ -58,7 +58,7 @@ public class Log extends GenericLog {
     public void log(String level, String message, Object... args) {
         IAccount acc = null;
         try {
-            acc = play.modules.aaa.utils.Factory.account().getCurrent();
+            acc = play.modules.aaa.utils.AAAFactory.account().getCurrent();
         } catch (Exception e) {
             Logger.error(e, "error get context account instance");
         }
@@ -70,7 +70,7 @@ public class Log extends GenericLog {
             Object... args) {
         IAccount acc = null;
         try {
-            acc = play.modules.aaa.utils.Factory.account().getCurrent();
+            acc = play.modules.aaa.utils.AAAFactory.account().getCurrent();
         } catch (Exception e) {
             Logger.error(e, "error get context account instance");
         }

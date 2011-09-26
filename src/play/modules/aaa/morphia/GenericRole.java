@@ -13,12 +13,12 @@ import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.Reference;
 
 @SuppressWarnings("serial")
-public class GenericRole extends Model implements IRole {
+public abstract class GenericRole extends Model implements IRole {
 
    @Id
    private String name_;
    
-   @Reference
+   @Reference("rights")
    private Set<IRight> rights_ = new HashSet<IRight>();
    
    // --- constructor ---
@@ -30,13 +30,13 @@ public class GenericRole extends Model implements IRole {
    
    // --- accessors ---
    @Override
-   public IRole addRight(Right right) {
+   public IRole addRight(IRight right) {
       rights_.add(right);
       return this;
    }
    
    @Override
-   public IRole removeRight(Right right) {
+   public IRole removeRight(IRight right) {
       rights_.remove(right);
       return this;
    }

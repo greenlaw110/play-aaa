@@ -3,8 +3,6 @@ package play.modules.aaa.utils;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.h2.util.StringUtils;
-
 import play.Play;
 import play.jobs.Job;
 import play.jobs.OnApplicationStart;
@@ -25,7 +23,7 @@ public class ConfigurationAuthenticator implements IAuthenticator {
     public boolean authenticate(String username, String password) {
         String pass = credentials_.get(username);
         
-        return StringUtils.equals(pass, password);
+        return StringUtil.isEqual(pass, password);
     }
     
     private static final Map<String,String> credentials_ = new HashMap<String,String>(); 

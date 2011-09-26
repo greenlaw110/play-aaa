@@ -1,5 +1,7 @@
 package play.modules.aaa;
 
+import java.lang.reflect.Method;
+
 import play.Logger;
 import play.Play;
 import play.Play.Mode;
@@ -8,8 +10,10 @@ import play.classloading.ApplicationClasses.ApplicationClass;
 import play.db.jpa.JPAPlugin;
 import play.exceptions.UnexpectedException;
 import play.modules.aaa.enhancer.Enhancer;
+import play.modules.aaa.utils.AAAFactory;
 import play.modules.aaa.utils.ConfigConstants;
 import play.modules.aaa.utils.ConfigurationAuthenticator;
+import play.mvc.Scope.Session;
 
 /**
  * <code>play.module.aaa.Plugin</code> provides off the shelf framework for
@@ -53,6 +57,42 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
       }
       new ConfigurationAuthenticator.BootLoader().doJob();
       Logger.info(msg_("initialized"));
+   }
+   
+   @Override
+   public void beforeActionInvocation(Method actionMethod) {
+       String name = Session.current().get("username");
+       IAccount account = AAAFactory.account().getByName(name);
+       if (null != account) account.setCurrent(account);
+       else Session.current().remove("username");
+   }
+   
+   @Override
+   public void invocationFinally() {
+       PlayDynamicRightChecker.clearCurrentObject();
+   }
+   
+   @Override
+   public void onConfigurationRead() {
+       if (isJPAModel_()) {
+           String jpaEntities = Play.configuration.getProperty("jpa.entities", "").trim();
+           if (!"".equals(jpaEntities)) {
+               jpaEntities += ",play.modules.aaa.Account";
+           } else {
+               jpaEntities = "play.modules.aaa.Account";
+           }
+           Play.configuration.put("jpa.entities", jpaEntities);
+       }
+   }
+
+   @Override
+   public void afterApplicationStart() {
+       load_();
+   }
+   
+   private void load_() {
+       //startTx_();
+       // TODO: implement a generic load method support loading any types of implementation
    }
 
    private static boolean isJPAModel_() {

@@ -27,11 +27,10 @@ public abstract class GenericAccount extends Model implements IAccount {
    @com.google.code.morphia.annotations.Property("password")
    private String password_;
    
-   @com.google.code.morphia.annotations.Property("roles")
-   @Reference
+   @Reference("roles")
    private Set<IRole> roles_ = new HashSet<IRole>();
    
-   @com.google.code.morphia.annotations.Property("privilege")
+   @Reference("privilege")
    private IPrivilege privilege_;
    
    // --- constructor ---

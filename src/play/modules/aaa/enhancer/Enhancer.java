@@ -7,6 +7,8 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.Modifier;
+import javassist.bytecode.CodeAttribute;
+import javassist.bytecode.LocalVariableAttribute;
 import play.Play;
 import play.classloading.ApplicationClasses.ApplicationClass;
 import play.modules.aaa.AllowSystemAccount;
@@ -21,7 +23,7 @@ import play.modules.aaa.RequirePrivilege;
 import play.modules.aaa.RequireRight;
 import play.modules.aaa.utils.AnnotationHelper;
 import play.modules.aaa.utils.ConfigConstants;
-import play.modules.aaa.utils.Factory;
+import play.modules.aaa.utils.AAAFactory;
 
 public class Enhancer extends play.classloading.enhancers.Enhancer {
 
@@ -35,7 +37,7 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
             boolean buildAuthorityRegistryOnly) throws Exception {
         CtClass ctClass = makeClass(applicationClass);
         for (final CtMethod ctMethod : ctClass.getDeclaredMethods()) {
-            if (!Modifier.isPublic(ctMethod.getModifiers())) {
+            if (!Modifier.isPublic(ctMethod.getModifiers()) || javassist.Modifier.isAbstract(ctMethod.getModifiers())) {
                 continue;
             }
 
@@ -71,6 +73,10 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
             String key = ctMethod.getLongName();
             Authority.registAuthoriable_(key, rr, rp);
             if (!buildAuthorityRegistryOnly) {
+                if (0 < ctMethod.getParameterTypes().length) {
+                    // try best to guess the current object
+                    ctMethod.insertBefore("play.modules.aaa.PlayDynamicRightChecker.setObjectIfNoCurrent($1);");
+                }
                 ctMethod.insertBefore("play.modules.aaa.enhancer.Enhancer.Authority.checkPermission(\""
                         + key + "\", " + Boolean.toString(allowSystem) + ");");
                 if (null != ra) {
@@ -165,8 +171,8 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
         }
 
         public static void ensureRightPrivilege() {
-            IRight rightFact = Factory.right();
-            IPrivilege privFact = Factory.privilege();
+            IRight rightFact = AAAFactory.right();
+            IPrivilege privFact = AAAFactory.privilege();
             for (Authority a : reg_.values()) {
                 RequireRight rr = a.rr_;
                 IRight r = a.r_;
@@ -206,11 +212,9 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
 
         public static void checkPermission(String key, boolean allowSystem)
                 throws NoAccessException {
-            if (Play.mode == Play.Mode.DEV) {
-                if (Boolean.parseBoolean(Play.configuration.getProperty(
-                        ConfigConstants.DISABLE, "false"))) {
-                    return;
-                }
+            if (Boolean.parseBoolean(Play.configuration.getProperty(
+                    ConfigConstants.DISABLE, "false"))) {
+                return;
             }
 
             IAuthorizeable a = reg_.get(key);
@@ -220,7 +224,7 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
             }
             IAccount acc = null;
             try {
-                IAccount accFact = Factory.account();
+                IAccount accFact = AAAFactory.account();
                 acc = accFact.getCurrent();
                 if (null == acc) {
                     if (allowSystem) {

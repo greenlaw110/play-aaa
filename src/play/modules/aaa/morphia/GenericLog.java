@@ -59,12 +59,12 @@ public abstract class GenericLog extends Model implements ILog {
    @PostLoad
    private void retreivePrincipal_() {
       try {
-         principal_ = play.modules.aaa.utils.Factory.account().getByName(p0_);
+         principal_ = play.modules.aaa.utils.AAAFactory.account().getByName(p0_);
       } catch (Exception e) {
          Logger.error(e, "error loading principal by name: %1$s", p0_);
       }
       try {
-    	  acknowledger_ = play.modules.aaa.utils.Factory.account().getByName(p1_);
+    	  acknowledger_ = play.modules.aaa.utils.AAAFactory.account().getByName(p1_);
       } catch (Exception e) {
     	  Logger.error(e, "error loading acknowledger by name: %1$s", p1_);
       }
@@ -101,7 +101,7 @@ public abstract class GenericLog extends Model implements ILog {
    @Override
    public void acknowledge() {
 	   try {
-		   IAccount fact = play.modules.aaa.utils.Factory.account();
+		   IAccount fact = play.modules.aaa.utils.AAAFactory.account();
 		   IAccount acc = fact.getCurrent();
 		   if (null == acc) acc = fact.getSystemAccount();
 		   acknowledger_ = acc;

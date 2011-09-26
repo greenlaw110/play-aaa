@@ -1,0 +1,6 @@
+self: play -> aaa 1.2
+
+require:
+    - play 1.2
+    - play -> secure
+    - play -> crud

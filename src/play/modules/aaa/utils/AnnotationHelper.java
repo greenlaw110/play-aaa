@@ -41,7 +41,7 @@ public class AnnotationHelper {
             }
             if (null != s) {
                 try {
-                    r = Factory.right().findByName(s);
+                    r = AAAFactory.right().findByName(s);
                 } catch (Exception e) {
                     Logger.error(e, "Error locating IRight implementation");
                 }
@@ -87,7 +87,7 @@ public class AnnotationHelper {
             }
             if (null != s) {
                 try {
-                    p = Factory.privilege().findByName(s);
+                    p = AAAFactory.privilege().findByName(s);
                 } catch (Exception e) {
                     Logger.warn(
                             e,

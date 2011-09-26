@@ -108,11 +108,24 @@ public interface IAccount extends IDataTable, IAAAObject {
    IAccount getCurrent();
    
    /**
+    * Factory method to set an account instance associated with current execution context.
+    * @param account
+    */
+   void setCurrent(IAccount account);
+   
+   /**
     * Factory method to return a system account instance
     * @return
     */
    IAccount getSystemAccount();
    
+   /**
+    * Factory method to create an account instance
+    * @param name
+    * @return
+    */
+   IAccount create(String name);
+
    /**
     * The recommended system account name. However it's subject to account implementation to determine
     * whether use it or not
