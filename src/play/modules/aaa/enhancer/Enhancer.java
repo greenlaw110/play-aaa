@@ -1,14 +1,15 @@
 package play.modules.aaa.enhancer;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.Modifier;
-import javassist.bytecode.CodeAttribute;
-import javassist.bytecode.LocalVariableAttribute;
 import play.Play;
 import play.classloading.ApplicationClasses.ApplicationClass;
 import play.modules.aaa.AllowSystemAccount;
@@ -21,9 +22,9 @@ import play.modules.aaa.PlayDynamicRightChecker;
 import play.modules.aaa.RequireAccounting;
 import play.modules.aaa.RequirePrivilege;
 import play.modules.aaa.RequireRight;
+import play.modules.aaa.utils.AAAFactory;
 import play.modules.aaa.utils.AnnotationHelper;
 import play.modules.aaa.utils.ConfigConstants;
-import play.modules.aaa.utils.AAAFactory;
 
 public class Enhancer extends play.classloading.enhancers.Enhancer {
 
@@ -36,7 +37,10 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
     private void enhance_(ApplicationClass applicationClass,
             boolean buildAuthorityRegistryOnly) throws Exception {
         CtClass ctClass = makeClass(applicationClass);
-        for (final CtMethod ctMethod : ctClass.getDeclaredMethods()) {
+        Set<CtMethod> s = new HashSet<CtMethod>();
+        s.addAll(Arrays.asList(ctClass.getDeclaredMethods()));
+        s.addAll(Arrays.asList(ctClass.getMethods()));
+        for (final CtMethod ctMethod : s) {
             if (!Modifier.isPublic(ctMethod.getModifiers()) || javassist.Modifier.isAbstract(ctMethod.getModifiers())) {
                 continue;
             }
@@ -68,17 +72,20 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                 }
             }
             if (!needsEnhance)
-                return;
+                continue;
 
             String key = ctMethod.getLongName();
             Authority.registAuthoriable_(key, rr, rp);
             if (!buildAuthorityRegistryOnly) {
-                if (0 < ctMethod.getParameterTypes().length) {
-                    // try best to guess the current object
-                    ctMethod.insertBefore("play.modules.aaa.PlayDynamicRightChecker.setObjectIfNoCurrent($1);");
-                }
                 ctMethod.insertBefore("play.modules.aaa.enhancer.Enhancer.Authority.checkPermission(\""
                         + key + "\", " + Boolean.toString(allowSystem) + ");");
+                CtClass[] paraTypes = ctMethod.getParameterTypes();
+                String  sParam = null;
+                if (0 < paraTypes.length) {
+                    sParam = "new Object[0]";
+                } else {
+                    sParam = "{$$}";
+                }
                 if (null != ra) {
                     String msg = ra.value();
                     if (null == msg || "".equals(msg))
@@ -87,14 +94,18 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                             + msg
                             + "\", "
                             + Boolean.toString(allowSystem)
-                            + ", $$);");
+                            + ", " + sParam + ");");
                     CtClass etype = ClassPool.getDefault().get(
                             "java.lang.Exception");
                     ctMethod.addCatch(
                             "{play.modules.aaa.utils.Accounting.error($e, \""
                                     + msg + "\", "
                                     + Boolean.toString(allowSystem)
-                                    + ", $$); throw $e;}", etype);
+                                    + ", " + sParam + "); throw $e;}", etype);
+                }
+                if (0 < ctMethod.getParameterTypes().length) {
+                    // try best to guess the current object
+                    ctMethod.insertBefore("play.modules.aaa.PlayDynamicRightChecker.setObjectIfNoCurrent($1);");
                 }
             }
         }
@@ -105,7 +116,7 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
     }
 
     public void buildAuthorityRegistry() throws Exception {
-        if (Authority.reg_.size() < 0) {
+        if (Authority.reg_.size() < 1) {
             // force build authority registry
             for (ApplicationClass ac : Play.classes.all()) {
                 enhance_(ac, true);

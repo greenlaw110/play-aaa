@@ -21,146 +21,164 @@ public class PlayDynamicRightChecker extends Controller implements
     public static void setCurrentObject(Object model) {
         curObj_.set(model);
     }
-    
+
     public static void setObjectIfNoCurrent(Object model) {
         if (null == curObj_.get()) {
             curObj_.set(model);
         }
     }
-    
+
     public static void clearCurrentObject() {
         curObj_.remove();
     }
-    
+
     public interface IAccessChecker<M> {
         boolean hasAccess(IAccount account, M model);
     }
-    
-    public static abstract class AccessCheckerBase<M> implements IAccessChecker<M> {
+
+    public static abstract class AccessCheckerBase<M> implements
+            IAccessChecker<M> {
         protected AccessCheckerBase() {
             PlayDynamicRightChecker.registerChecker(this);
         }
-        @SuppressWarnings ("unchecked")
-        public Class<M> getTypeParameterClass() {
-            Type type = getClass().getGenericSuperclass();
-            ParameterizedType paramType = (ParameterizedType) type;
-            return (Class<M>) paramType.getActualTypeArguments()[0];
-        }
+        // @SuppressWarnings ("unchecked")
+        // public Class<M> getTypeParameterClass() {
+        // Type type = getClass().getGenericSuperclass();
+        // ParameterizedType paramType = (ParameterizedType) type;
+        // return (Class<M>) paramType.getActualTypeArguments()[0];
+        // }
     }
-    
+
     private static IAccessChecker<Object> defCheck_ = null;
+
     public static void setDefaultAccessChecker(IAccessChecker<Object> checker) {
         defCheck_ = checker;
     }
-    
+
     private static Map<Class<?>, IAccessChecker<?>> checkers_ = new HashMap<Class<?>, IAccessChecker<?>>();
-    public  static void  registerChecker(IAccessChecker<?> chkr) {
-        checkers_.put(chkr.getClass(), chkr);
+
+    public static void registerChecker(IAccessChecker<?> chkr) {
+        Type[] types = chkr.getClass().getGenericInterfaces();
+        Type type = null;
+        for (Type t : types) {
+            if (t.toString().indexOf("IAccessChecker") != -1) {
+                type = t;
+                break;
+            }
+        }
+        ParameterizedType paramType = (ParameterizedType) type;
+        @SuppressWarnings("rawtypes")
+        Class c0 = (Class<?>) paramType.getActualTypeArguments()[0];
+
+        checkers_.put(c0, chkr);
     }
-    
+
     @SuppressWarnings("unchecked")
     public static boolean _hasAccess() {
-        
+
         Object obj = curObj_.get();
-        IAccount acc = (null == Play.configuration) ? null : AAAFactory.account().getCurrent();
+        IAccount acc = (null == Play.configuration) ? null : AAAFactory
+                .account().getCurrent();
         if (obj == null || acc == null) {
             return false;
         }
-        
+
         @SuppressWarnings("rawtypes")
         IAccessChecker checker = checkers_.get(obj.getClass());
         if (null != checker) {
             return checker.hasAccess(acc, obj);
         }
-        
-        if (null == defCheck_) return false;
+
+        if (null == defCheck_)
+            return false;
         return defCheck_.hasAccess(acc, obj);
     }
-    
+
     @Override
     public boolean hasAccess() {
         return _hasAccess();
     }
-    
-    @OnApplicationStart
-    public static class CheckerRegister extends Job<Object> {
-        @SuppressWarnings({ "rawtypes"})
-        @Override
-        public void doJob() {
-            List<Class> cl = Play.classloader.getAssignableClasses(IAccessChecker.class);
-            for (Class c: cl) {
-                try {
-                    registerChecker((IAccessChecker) c.newInstance());
-                } catch (Exception e) {
-                    throw new UnexpectedException(e);
-                }
-            }
-        }
-    }
-    
-//    @SuppressWarnings({ "rawtypes", "unchecked" })
-//    private static void t_findCheckers_() {
-//        Class[] ca = {DateChecker.class};
-//        List<Class> cl = Arrays.asList(ca);
-//        
-//        for (Class c: cl) {
-//            Type[] types = c.getGenericInterfaces();
-//            Type type = null;
-//            for (Type t: types) {
-//                if (t.toString().indexOf("IAccessChecker") != -1) {
-//                    type = t;
-//                    break;
-//                }
-//            }
-//            ParameterizedType paramType = (ParameterizedType) type;
-//            Class c0 = (Class<?>)paramType.getActualTypeArguments()[0];
-//            try {
-//                registerChecker(c0, (IAccessChecker) c.newInstance());
-//            } catch (InstantiationException e) {
-//                e.printStackTrace();
-//            } catch (IllegalAccessException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
-//    
-//    public static class DateChecker implements IAccessChecker<Date> {
-//        @Override
-//        public boolean hasAccess(IAccount account, Date model) {
-//            return (model.after(new Date()));
-//        }
-//    }
-//    
-//    public static void main(String[] args) {
-//
-//        new AccessCheckerBase<String>(){
-//            @Override
-//            public boolean hasAccess(IAccount account, String model) {
-//                return "good".equals(model);
-//            }
-//        };
-//        
-//        new AccessCheckerBase<Integer>(){
-//            @Override
-//            public boolean hasAccess(IAccount account, Integer model) {
-//                return model == 110;
-//            }
-//        };
-//        
-//        t_findCheckers_();
-//        
-//        setCurrentObject("good");
-//        System.out.println(_hasAccess());
-//
-//        setCurrentObject(110);
-//        System.out.println(_hasAccess());
-//        
-//        long l = System.currentTimeMillis();
-//        setCurrentObject(new Date(l - 100000));
-//        System.out.println(_hasAccess());
-//
-//        setCurrentObject(new Date(l + 100000));
-//        System.out.println(_hasAccess());
-//    }
+
+    // @OnApplicationStart
+    // public static class CheckerRegister extends Job<Object> {
+    // @SuppressWarnings({ "rawtypes"})
+    // @Override
+    // public void doJob() {
+    // List<Class> cl =
+    // Play.classloader.getAssignableClasses(IAccessChecker.class);
+    // for (Class c: cl) {
+    // try {
+    // registerChecker(c, (IAccessChecker)c.newInstance());
+    // } catch (Exception e) {
+    // throw new UnexpectedException(e);
+    // }
+    // }
+    // }
+    // }
+
+    // @SuppressWarnings({ "rawtypes", "unchecked" })
+    // private static void t_findCheckers_() {
+    // Class[] ca = {DateChecker.class};
+    // List<Class> cl = Arrays.asList(ca);
+    //
+    // for (Class c: cl) {
+    // Type[] types = c.getGenericInterfaces();
+    // Type type = null;
+    // for (Type t: types) {
+    // if (t.toString().indexOf("IAccessChecker") != -1) {
+    // type = t;
+    // break;
+    // }
+    // }
+    // ParameterizedType paramType = (ParameterizedType) type;
+    // Class c0 = (Class<?>)paramType.getActualTypeArguments()[0];
+    // try {
+    // registerChecker(c0, (IAccessChecker) c.newInstance());
+    // } catch (InstantiationException e) {
+    // e.printStackTrace();
+    // } catch (IllegalAccessException e) {
+    // e.printStackTrace();
+    // }
+    // }
+    // }
+    //
+    // public static class DateChecker implements IAccessChecker<Date> {
+    // @Override
+    // public boolean hasAccess(IAccount account, Date model) {
+    // return (model.after(new Date()));
+    // }
+    // }
+    //
+    // public static void main(String[] args) {
+    //
+    // new AccessCheckerBase<String>(){
+    // @Override
+    // public boolean hasAccess(IAccount account, String model) {
+    // return "good".equals(model);
+    // }
+    // };
+    //
+    // new AccessCheckerBase<Integer>(){
+    // @Override
+    // public boolean hasAccess(IAccount account, Integer model) {
+    // return model == 110;
+    // }
+    // };
+    //
+    // t_findCheckers_();
+    //
+    // setCurrentObject("good");
+    // System.out.println(_hasAccess());
+    //
+    // setCurrentObject(110);
+    // System.out.println(_hasAccess());
+    //
+    // long l = System.currentTimeMillis();
+    // setCurrentObject(new Date(l - 100000));
+    // System.out.println(_hasAccess());
+    //
+    // setCurrentObject(new Date(l + 100000));
+    // System.out.println(_hasAccess());
+    // }
 
 }
