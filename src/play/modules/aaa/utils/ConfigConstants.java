@@ -4,6 +4,13 @@ public interface ConfigConstants {
    public static final String SYSTEM_PERMISSION_CHECK = "aaa.system-permission-check";
    
    public static final String DISABLE = "aaa.disable";
+
+   /*
+    * Control whether build auth registry automatically. Default: true
+    * could be disabled if user want to programatically setup privileges
+    * and rights first and call
+    */
+   public static final String BUILD_AUTH_REGISTRY = "aaa.buildAuthRegistry";
    
    public static final String SYS_ACCOUNT = "aaa.account.system";
    

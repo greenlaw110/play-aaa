@@ -29,8 +29,15 @@ public interface IRole extends IDataTable, IAAAObject {
     */
    IRole removeRight(IRight right);
 
-   
-   /**
+
+    /**
+     * Factory method to return a role instance from given name.
+     * @param name
+     * @return role instance or <code>null</code> if not found by the name
+     */
+    IRole getByName(String name);
+
+    /**
     * Factory method to create a right instance
     * @param name
     * @return

@@ -25,7 +25,8 @@ public class Role extends GenericRole {
         super(name);
     }
 
-    public IRole findByName(String name) {
+    @Override
+    public IRole getByName(String name) {
         return findById(name);
     }
     

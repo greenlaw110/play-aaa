@@ -1,6 +1,15 @@
 # History
+# 1.2c - authorized if privilege level equals to required one (previous must be larger than)
+#      - enhancement apply to constructors
+#      - Secure now includes "Check" implementation
+#      - Fix bug: Privilege.findByName() query by unknown name: "name"
+#      - Add new configuration item: aaa.buildAuthRegistry, when set to false
+#        AAA will not build authorization registry on startup. User program could
+#        call play.modules.aaa.Plugin.buildAuthRegistry() when priviledge and rights
+#        configured
+#      - Support _aaa.yml configuration file load on application start
 # 1.2b - first workable version (on mongodb)
-self: play -> aaa 1.2b
+self: play -> aaa 1.2c
 
 require:
     - play 1.2

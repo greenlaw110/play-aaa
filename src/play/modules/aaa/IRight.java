@@ -38,10 +38,19 @@ public interface IRight extends IDataTable, IAAAObject {
     * 
     * @param name
     * @return
+    * @deprecated use getByName instead
     */
    IRight findByName(String name);
-   
-   /**
+
+    /**
+     * Factory method to find an instance with given name
+     *
+     * @param name
+     * @return
+     */
+    IRight getByName(String name);
+
+    /**
     * Factory method to create a right instance
     * @param name
     * @return

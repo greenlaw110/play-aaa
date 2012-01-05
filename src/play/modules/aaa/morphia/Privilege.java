@@ -28,8 +28,12 @@ public class Privilege extends GenericPrivilege {
 
     @Override
     public IPrivilege findByName(String name) {
-        Privilege p = createQuery().filter("name", name).get();
-        return p;
+        return getByName(name);
+    }
+    
+    @Override
+    public IPrivilege getByName(String name) {
+        return findById(name);
     }
 
     @Override

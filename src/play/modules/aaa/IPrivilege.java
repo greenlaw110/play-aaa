@@ -21,10 +21,18 @@ public interface IPrivilege extends Comparable<IPrivilege>, IDataTable, IAAAObje
     * Factory method to find privilege by name
     * @param name
     * @return
+    * @deprecated use getByName instead
     */
    IPrivilege findByName(String name);
-   
-   /**
+
+    /**
+     * Factory method to find privilege by name
+     * @param name
+     * @return
+     */
+    IPrivilege getByName(String name);
+
+    /**
     * Factory method to create a privilege instance of the implementation
     * 
     * @param name

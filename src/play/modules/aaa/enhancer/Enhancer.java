@@ -6,10 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtMethod;
-import javassist.Modifier;
+import javassist.*;
 import play.Play;
 import play.classloading.ApplicationClasses.ApplicationClass;
 import play.modules.aaa.AllowSystemAccount;
@@ -37,11 +34,13 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
     private void enhance_(ApplicationClass applicationClass,
             boolean buildAuthorityRegistryOnly) throws Exception {
         CtClass ctClass = makeClass(applicationClass);
-        Set<CtMethod> s = new HashSet<CtMethod>();
+        Set<CtBehavior> s = new HashSet<CtBehavior>();
         s.addAll(Arrays.asList(ctClass.getDeclaredMethods()));
         s.addAll(Arrays.asList(ctClass.getMethods()));
-        for (final CtMethod ctMethod : s) {
-            if (!Modifier.isPublic(ctMethod.getModifiers()) || javassist.Modifier.isAbstract(ctMethod.getModifiers())) {
+        s.addAll(Arrays.asList(ctClass.getConstructors()));
+        s.addAll(Arrays.asList(ctClass.getDeclaredConstructors()));
+        for (final CtBehavior ctBehavior : s) {
+            if (!Modifier.isPublic(ctBehavior.getModifiers()) || javassist.Modifier.isAbstract(ctBehavior.getModifiers())) {
                 continue;
             }
 
@@ -50,7 +49,7 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
             RequirePrivilege rp = null;
             RequireAccounting ra = null;
             boolean allowSystem = false;
-            Object[] aa = ctMethod.getAnnotations();
+            Object[] aa = ctBehavior.getAnnotations();
             for (Object o : aa) {
                 if (o instanceof RequirePrivilege) {
                     needsEnhance = true;
@@ -74,12 +73,12 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
             if (!needsEnhance)
                 continue;
 
-            String key = ctMethod.getLongName();
+            String key = ctBehavior.getLongName();
             Authority.registAuthoriable_(key, rr, rp);
             if (!buildAuthorityRegistryOnly) {
-                ctMethod.insertBefore("play.modules.aaa.enhancer.Enhancer.Authority.checkPermission(\""
+                ctBehavior.insertBefore("play.modules.aaa.enhancer.Enhancer.Authority.checkPermission(\""
                         + key + "\", " + Boolean.toString(allowSystem) + ");");
-                CtClass[] paraTypes = ctMethod.getParameterTypes();
+                CtClass[] paraTypes = ctBehavior.getParameterTypes();
                 String  sParam = null;
                 if (0 < paraTypes.length) {
                     sParam = "new Object[0]";
@@ -90,22 +89,22 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                     String msg = ra.value();
                     if (null == msg || "".equals(msg))
                         msg = key;
-                    ctMethod.insertBefore("play.modules.aaa.utils.Accounting.info(\""
+                    ctBehavior.insertBefore("play.modules.aaa.utils.Accounting.info(\""
                             + msg
                             + "\", "
                             + Boolean.toString(allowSystem)
                             + ", " + sParam + ");");
                     CtClass etype = ClassPool.getDefault().get(
                             "java.lang.Exception");
-                    ctMethod.addCatch(
+                    ctBehavior.addCatch(
                             "{play.modules.aaa.utils.Accounting.error($e, \""
                                     + msg + "\", "
                                     + Boolean.toString(allowSystem)
                                     + ", " + sParam + "); throw $e;}", etype);
                 }
-                if (0 < ctMethod.getParameterTypes().length) {
+                if (0 < ctBehavior.getParameterTypes().length) {
                     // try best to guess the current object
-                    ctMethod.insertBefore("play.modules.aaa.PlayDynamicRightChecker.setObjectIfNoCurrent($1);");
+                    ctBehavior.insertBefore("play.modules.aaa.PlayDynamicRightChecker.setObjectIfNoCurrent($1);");
                 }
             }
         }
@@ -123,6 +122,11 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
             }
         }
         Authority.ensureRightPrivilege();
+    }
+    
+    public void rebuildAuthorityRegistry() throws Exception {
+        Authority.reg_.clear();
+        buildAuthorityRegistry();
     }
 
     public static class Authority implements IAuthorizeable {
@@ -194,7 +198,7 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                                 "Null RequireRight found for " + a.key_);
                     if (s.startsWith("aaa"))
                         s = Play.configuration.getProperty(s);
-                    r = rightFact.findByName(s);
+                    r = rightFact.getByName(s);
                     if (null == r) {
                         r = rightFact.create(s);
                         r._save();
@@ -211,7 +215,7 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                                 "Null RequirePrivilege found for " + a.key_);
                     if (s.startsWith("aaa"))
                         s = Play.configuration.getProperty(s);
-                    p = privFact.findByName(s);
+                    p = privFact.getByName(s);
                     if (null == p) {
                         p = privFact.create(s, 0);
                         p._save();
@@ -255,8 +259,9 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                     }
                 }
 
+                IRight r = a.getRequiredRight();
                 if (!acc.hasAccessTo(a)
-                        || (a.getRequiredRight().isDynamic() && !PlayDynamicRightChecker
+                        || (null != r && r.isDynamic() && !PlayDynamicRightChecker
                                 ._hasAccess())) {
                     throw new NoAccessException("no permission");
                 }

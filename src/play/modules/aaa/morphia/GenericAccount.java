@@ -26,7 +26,7 @@ public abstract class GenericAccount extends Model implements IAccount {
    @SuppressWarnings("unused")
    @com.google.code.morphia.annotations.Property("password")
    private String password_;
-   
+
    @Reference("roles")
    private Set<IRole> roles_ = new HashSet<IRole>();
    
@@ -98,7 +98,7 @@ public abstract class GenericAccount extends Model implements IAccount {
    public boolean hasAccessTo(IAuthorizeable object) {
       IPrivilege reqP = object.getRequiredPrivilege();
       if (null != privilege_ && null != reqP) {
-         if (privilege_.compareTo(reqP) > 0) return true;
+         if (privilege_.compareTo(reqP) >= 0) return true;
       }
       IRight reqR = object.getRequiredRight();
       if (null == reqR) return false;

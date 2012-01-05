@@ -24,10 +24,17 @@ public class Right extends GenericRight {
         super(name);
     }
 
+    @Override
     public IRight findByName(String name) {
+        return getByName(name);
+    }
+
+    @Override
+    public IRight getByName(String name) {
         return findById(name);
     }
-    
+
+    @Override
     public IRight create(String name) {
         return new Right(name);
     }
