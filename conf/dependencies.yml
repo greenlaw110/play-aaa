@@ -8,6 +8,7 @@
 #        call play.modules.aaa.Plugin.buildAuthRegistry() when priviledge and rights
 #        configured
 #      - Support _aaa.yml configuration file load on application start
+#      - Dynamic access check now support model based on interface
 # 1.2b - first workable version (on mongodb)
 self: play -> aaa 1.2c
 

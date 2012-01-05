@@ -73,14 +73,30 @@ public class PlayDynamicRightChecker extends Controller implements
     public static boolean _hasAccess() {
 
         Object obj = curObj_.get();
+        if (null == obj) return false;
         IAccount acc = (null == Play.configuration) ? null : AAAFactory
                 .account().getCurrent();
-        if (obj == null || acc == null) {
+        if (null == acc) {
             return false;
         }
 
+        Class<?> objClass = obj.getClass();
         @SuppressWarnings("rawtypes")
-        IAccessChecker checker = checkers_.get(obj.getClass());
+        IAccessChecker checker = checkers_.get(objClass);
+        if (null == checker) {
+            // try to match superclass, interface etc
+            for (Class<?> c: checkers_.keySet()) {
+                if (c.isAssignableFrom(objClass)) {
+                    checker = checkers_.get(c);
+                    if (null != checker) {
+                        // cache the result so that next time
+                        // it can be accessed instantly
+                        checkers_.put(objClass, checker);
+                        break;
+                    }
+                }
+            }
+        }
         if (null != checker) {
             return checker.hasAccess(acc, obj);
         }
