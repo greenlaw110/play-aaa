@@ -263,7 +263,7 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                 if (!acc.hasAccessTo(a)
                         || (null != r && r.isDynamic() && !PlayDynamicRightChecker
                                 ._hasAccess())) {
-                    throw new NoAccessException("no permission");
+                    throw new NoAccessException("Access denied");
                 }
             } catch (NoAccessException nae) {
                 throw nae;
