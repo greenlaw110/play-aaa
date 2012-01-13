@@ -9,16 +9,7 @@ import java.util.Set;
 import javassist.*;
 import play.Play;
 import play.classloading.ApplicationClasses.ApplicationClass;
-import play.modules.aaa.AllowSystemAccount;
-import play.modules.aaa.IAccount;
-import play.modules.aaa.IAuthorizeable;
-import play.modules.aaa.IPrivilege;
-import play.modules.aaa.IRight;
-import play.modules.aaa.NoAccessException;
-import play.modules.aaa.PlayDynamicRightChecker;
-import play.modules.aaa.RequireAccounting;
-import play.modules.aaa.RequirePrivilege;
-import play.modules.aaa.RequireRight;
+import play.modules.aaa.*;
 import play.modules.aaa.utils.AAAFactory;
 import play.modules.aaa.utils.AnnotationHelper;
 import play.modules.aaa.utils.ConfigConstants;
@@ -37,8 +28,8 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
         Set<CtBehavior> s = new HashSet<CtBehavior>();
         s.addAll(Arrays.asList(ctClass.getDeclaredMethods()));
         s.addAll(Arrays.asList(ctClass.getMethods()));
-        s.addAll(Arrays.asList(ctClass.getConstructors()));
-        s.addAll(Arrays.asList(ctClass.getDeclaredConstructors()));
+//        s.addAll(Arrays.asList(ctClass.getConstructors()));
+//        s.addAll(Arrays.asList(ctClass.getDeclaredConstructors()));
         for (final CtBehavior ctBehavior : s) {
             if (!Modifier.isPublic(ctBehavior.getModifiers()) || javassist.Modifier.isAbstract(ctBehavior.getModifiers())) {
                 continue;
@@ -77,7 +68,7 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
             Authority.registAuthoriable_(key, rr, rp);
             if (!buildAuthorityRegistryOnly) {
                 ctBehavior.insertBefore("play.modules.aaa.enhancer.Enhancer.Authority.checkPermission(\""
-                        + key + "\", " + Boolean.toString(allowSystem) + ");");
+                        + key + "\", " + Boolean.toString(allowSystem) + ", $0);");
                 CtClass[] paraTypes = ctBehavior.getParameterTypes();
                 String  sParam = null;
                 if (0 < paraTypes.length) {
@@ -225,12 +216,14 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
             }
         }
 
-        public static void checkPermission(String key, boolean allowSystem)
+        public static void checkPermission(String key, boolean allowSystem, Object target)
                 throws NoAccessException {
             if (Boolean.parseBoolean(Play.configuration.getProperty(
                     ConfigConstants.DISABLE, "false"))) {
                 return;
             }
+
+            if (null != target) PlayDynamicRightChecker.setCurrentObject(target);
 
             IAuthorizeable a = reg_.get(key);
             if (null == a) {
@@ -258,11 +251,14 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                                 "cannot determine principal account");
                     }
                 }
-
-                IRight r = a.getRequiredRight();
-                if (!acc.hasAccessTo(a)
-                        || (null != r && r.isDynamic() && !PlayDynamicRightChecker
-                                ._hasAccess())) {
+                
+                // superuser check
+                boolean isSuperUser = false;
+                if (Plugin.superuser > 0) {
+                    IPrivilege p = acc.getPrivilege();
+                    isSuperUser = p.getLevel() >= Plugin.superuser;
+                }
+                if (!isSuperUser && !acc.hasAccessTo(a)) {
                     throw new NoAccessException("Access denied");
                 }
             } catch (NoAccessException nae) {

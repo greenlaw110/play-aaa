@@ -7,11 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import play.libs.Crypto;
-import play.modules.aaa.IAccount;
-import play.modules.aaa.IAuthorizeable;
-import play.modules.aaa.IPrivilege;
-import play.modules.aaa.IRight;
-import play.modules.aaa.IRole;
+import play.modules.aaa.*;
 import play.modules.morphia.Model;
 
 import com.google.code.morphia.annotations.Id;
@@ -96,22 +92,31 @@ public abstract class GenericAccount extends Model implements IAccount {
 
    @Override
    public boolean hasAccessTo(IAuthorizeable object) {
-      IPrivilege reqP = object.getRequiredPrivilege();
-      if (null != privilege_ && null != reqP) {
-         if (privilege_.compareTo(reqP) >= 0) return true;
-      }
-      IRight reqR = object.getRequiredRight();
+       // privilege has higher priority and no dynamic checking
+       IPrivilege reqP = object.getRequiredPrivilege();
+       if (null != privilege_ && null != reqP) {
+           if (privilege_.compareTo(reqP) >= 0) return true;
+       }
+
+      // now check the rights
+       IRight reqR = object.getRequiredRight();
       if (null == reqR) return false;
       
       for (IRole role: roles_) {
          for (IRight right: role.getRights()) {
-            if (right.getName().equals(reqR.getName())) return true;
+            if (right.getName().equals(reqR.getName())) {
+                if (right.isDynamic()) {
+                    return PlayDynamicRightChecker._hasAccess();
+                } else {
+                    return true;
+                }
+            }
          }
       }
       return false;
    }
-   
-   // --- morphia model contract for user defined Id entities
+
+    // --- morphia model contract for user defined Id entities
    @Override
    public Object getId() {
       return name_;

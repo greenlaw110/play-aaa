@@ -68,11 +68,8 @@ public class PlayDynamicRightChecker extends Controller implements
 
         checkers_.put(c0, chkr);
     }
-
-    @SuppressWarnings("unchecked")
-    public static boolean _hasAccess() {
-
-        Object obj = curObj_.get();
+    
+    public static boolean hasAccessTo(Object obj) {
         if (null == obj) return false;
         IAccount acc = (null == Play.configuration) ? null : AAAFactory
                 .account().getCurrent();
@@ -104,6 +101,12 @@ public class PlayDynamicRightChecker extends Controller implements
         if (null == defCheck_)
             return false;
         return defCheck_.hasAccess(acc, obj);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static boolean _hasAccess() {
+        Object obj = curObj_.get();
+        return hasAccessTo(obj);
     }
 
     @Override

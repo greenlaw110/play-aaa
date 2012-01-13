@@ -2,7 +2,7 @@ package play.modules.aaa;
 
 import play.Logger;
 
-public class NoAccessException extends play.mvc.results.Forbidden {
+public class NoAccessException extends RuntimeException {
 
     private static final long serialVersionUID = 1080270792010078044L;
 

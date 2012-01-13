@@ -1,4 +1,7 @@
 # History
+# 1.2d - Support superuser. Configure aaa.superuser=9999 set the superuser privilege level
+#        for any user has prvilege larger than or equals to superuser level the permission check
+#        is passed
 # 1.2c - authorized if privilege level equals to required one (previous must be larger than)
 #      - enhancement apply to constructors
 #      - Secure now includes "Check" implementation

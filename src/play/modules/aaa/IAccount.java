@@ -49,8 +49,9 @@ public interface IAccount extends IDataTable, IAAAObject {
     * Determine whether this account has access to the given {@link IAuthorizeable} object.
     * 
     * <p>The implementation shall check both {@link IPrivilege} and {@link IRole roles} and hence
-    * {@link IRight rights} of this account against the requried {@link IAuthorizeable#getRequiredPrivilege() 
-    * privilege} and {@link IAuthorizeable#getRequiredRight()} of the given object
+    * {@link IRight rights} of this account against the required {@link IAuthorizeable#getRequiredPrivilege()
+    * privilege} and {@link IAuthorizeable#getRequiredRight()} of the given object. Note right checking will
+    * also apply the dynamic access checking
     * 
     * @param object which needs certain authority to access
     * @return true if this account has access to the given object, false otherwise

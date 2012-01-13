@@ -98,7 +98,23 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
             }
             Play.configuration.put("jpa.entities", jpaEntities);
         }
+        
+        String s = Play.configuration.getProperty("aaa.superuser");
+        if (null != s) {
+            try {
+                int i = Integer.valueOf(s);
+                superuser = i;
+            } catch (Exception e) {
+                Logger.warn(msg_("Error parsing configuration aaa.superuser. Please use positive integer."));
+            }
+        }
+        if (superuser <= 0)
+            Logger.info(msg_("superuser privilege disabled"));
+        else
+            Logger.info(msg_("superuser privilege: ", superuser));
     }
+    
+    public static int superuser = 9999;
 
     @Override
     public void onApplicationStart() {
