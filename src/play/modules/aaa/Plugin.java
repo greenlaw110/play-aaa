@@ -47,7 +47,7 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
     public static final String VERSION = "1.2";
 
     private static String msg_(String msg, Object... args) {
-        return String.format("MenuPlugin-" + VERSION + "> %1$s",
+        return String.format("AAAPlugin-" + VERSION + "> %1$s",
                 String.format(msg, args));
     }
 
@@ -111,7 +111,7 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
         if (superuser <= 0)
             Logger.info(msg_("superuser privilege disabled"));
         else
-            Logger.info(msg_("superuser privilege: ", superuser));
+            Logger.info(msg_("superuser privilege: %s", superuser));
     }
     
     public static int superuser = 9999;

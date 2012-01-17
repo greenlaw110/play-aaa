@@ -28,8 +28,8 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
         Set<CtBehavior> s = new HashSet<CtBehavior>();
         s.addAll(Arrays.asList(ctClass.getDeclaredMethods()));
         s.addAll(Arrays.asList(ctClass.getMethods()));
-//        s.addAll(Arrays.asList(ctClass.getConstructors()));
-//        s.addAll(Arrays.asList(ctClass.getDeclaredConstructors()));
+        s.addAll(Arrays.asList(ctClass.getConstructors()));
+        s.addAll(Arrays.asList(ctClass.getDeclaredConstructors()));
         for (final CtBehavior ctBehavior : s) {
             if (!Modifier.isPublic(ctBehavior.getModifiers()) || javassist.Modifier.isAbstract(ctBehavior.getModifiers())) {
                 continue;
@@ -65,10 +65,65 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                 continue;
 
             String key = ctBehavior.getLongName();
-            Authority.registAuthoriable_(key, rr, rp);
-            if (!buildAuthorityRegistryOnly) {
-                ctBehavior.insertBefore("play.modules.aaa.enhancer.Enhancer.Authority.checkPermission(\""
-                        + key + "\", " + Boolean.toString(allowSystem) + ", $0);");
+            String errMsg = String.format("Error enhancing class %s.%s: ", ctClass, ctBehavior);
+            // process rr & rp
+            if (null != rr || null != rp) {
+                // check before/after enhancement
+                Authority.registAuthoriable_(key, rr, rp);
+                if (!buildAuthorityRegistryOnly) {
+                    // verify if before attribute of rr and rp is consistent
+                    if (null != rr && null != rp && (rr.before() != rp.before())) {
+                        String reason = "The before setting of RequireRight and RequirePrivilege doesn't match";
+                        throw new RuntimeException(errMsg + reason);
+                    }
+                    boolean before = true;
+                    if (null != rr) before = rr.before();
+                    if (null != rp) before = rp.before();
+                    // try best to guess the target object
+                    String curObj = "";
+                    if (null != rr) {
+                        // target object only impact dynamic access checking, hence rr shall not be null
+                        boolean isConstructor = ctBehavior instanceof CtConstructor;
+                        boolean isStatic = false;
+                        if (!isConstructor) isStatic = Modifier.isStatic(ctBehavior.getModifiers());
+                        int paraCnt = ctBehavior.getParameterTypes().length;
+                        int id = rr.target();
+                        // calibrate target id 
+                        if (0 == id) {
+                            if (isConstructor) {
+                                id = -1;
+                            } else if (isStatic) {
+                                if (paraCnt > 0) id = 1;
+                                else id = -1;
+                            }
+                        } else if (id > paraCnt) {
+                            id = paraCnt;
+                        }
+                        // speculate cur target statement
+                        String sid = null;
+                        if (id == -1) sid = "_";
+                        if (id > -1) sid = String.valueOf(id);
+                        if (null != sid) {
+                            curObj = "play.modules.aaa.PlayDynamicRightChecker.setObjectIfNoCurrent($" + sid + ");";
+                        }
+
+                        if (-1 == id) before = false;
+                    }
+                    // check permission enhancement
+                    if (before) {
+                        ctBehavior.insertBefore(curObj + " play.modules.aaa.enhancer.Enhancer.Authority.checkPermission(\""
+                                + key + "\", " + Boolean.toString(allowSystem) + ");");
+                    } else {
+                        ctBehavior.insertAfter(curObj + " play.modules.aaa.enhancer.Enhancer.Authority.checkPermission(\""
+                                + key + "\", " + Boolean.toString(allowSystem) + ");");
+                    }
+                }
+            }
+            
+            if (buildAuthorityRegistryOnly) return;
+
+            // process ra
+            if (null != ra) {
                 CtClass[] paraTypes = ctBehavior.getParameterTypes();
                 String  sParam = null;
                 if (0 < paraTypes.length) {
@@ -76,33 +131,34 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                 } else {
                     sParam = "{$$}";
                 }
-                if (null != ra) {
-                    String msg = ra.value();
-                    if (null == msg || "".equals(msg))
-                        msg = key;
+                String msg = ra.value();
+                if (null == msg || "".equals(msg))
+                    msg = key;
+                if (ra.before()) {
                     ctBehavior.insertBefore("play.modules.aaa.utils.Accounting.info(\""
                             + msg
                             + "\", "
                             + Boolean.toString(allowSystem)
                             + ", " + sParam + ");");
-                    CtClass etype = ClassPool.getDefault().get(
-                            "java.lang.Exception");
-                    ctBehavior.addCatch(
-                            "{play.modules.aaa.utils.Accounting.error($e, \""
-                                    + msg + "\", "
-                                    + Boolean.toString(allowSystem)
-                                    + ", " + sParam + "); throw $e;}", etype);
+                } else {
+                    ctBehavior.insertAfter("play.modules.aaa.utils.Accounting.info(\""
+                            + msg
+                            + "\", "
+                            + Boolean.toString(allowSystem)
+                            + ", " + sParam + ");");
                 }
-                if (0 < ctBehavior.getParameterTypes().length) {
-                    // try best to guess the current object
-                    ctBehavior.insertBefore("play.modules.aaa.PlayDynamicRightChecker.setObjectIfNoCurrent($1);");
-                }
+                CtClass etype = ClassPool.getDefault().get(
+                        "java.lang.Exception");
+                ctBehavior.addCatch(
+                        "{play.modules.aaa.utils.Accounting.error($e, \""
+                                + msg + "\", "
+                                + Boolean.toString(allowSystem)
+                                + ", " + sParam + "); throw $e;}", etype);
             }
         }
-        if (!buildAuthorityRegistryOnly) {
-            applicationClass.enhancedByteCode = ctClass.toBytecode();
-            ctClass.detach();
-        }
+        
+        applicationClass.enhancedByteCode = ctClass.toBytecode();
+        ctClass.detach();
     }
 
     public void buildAuthorityRegistry() throws Exception {
@@ -216,14 +272,12 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
             }
         }
 
-        public static void checkPermission(String key, boolean allowSystem, Object target)
+        public static void checkPermission(String key, boolean allowSystem)
                 throws NoAccessException {
             if (Boolean.parseBoolean(Play.configuration.getProperty(
                     ConfigConstants.DISABLE, "false"))) {
                 return;
             }
-
-            if (null != target) PlayDynamicRightChecker.setCurrentObject(target);
 
             IAuthorizeable a = reg_.get(key);
             if (null == a) {
@@ -256,7 +310,7 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                 boolean isSuperUser = false;
                 if (Plugin.superuser > 0) {
                     IPrivilege p = acc.getPrivilege();
-                    isSuperUser = p.getLevel() >= Plugin.superuser;
+                    if (null != p) isSuperUser = p.getLevel() >= Plugin.superuser;
                 }
                 if (!isSuperUser && !acc.hasAccessTo(a)) {
                     throw new NoAccessException("Access denied");
