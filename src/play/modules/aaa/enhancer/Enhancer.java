@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javassist.*;
+import play.Logger;
 import play.Play;
 import play.classloading.ApplicationClasses.ApplicationClass;
 import play.modules.aaa.*;
@@ -24,6 +25,7 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
 
     private void enhance_(ApplicationClass applicationClass,
             boolean buildAuthorityRegistryOnly) throws Exception {
+        Plugin.trace("about to enhance applicationClass: %s", applicationClass);
         CtClass ctClass = makeClass(applicationClass);
         Set<CtBehavior> s = new HashSet<CtBehavior>();
         s.addAll(Arrays.asList(ctClass.getDeclaredMethods()));
@@ -88,7 +90,7 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                         if (!isConstructor) isStatic = Modifier.isStatic(ctBehavior.getModifiers());
                         int paraCnt = ctBehavior.getParameterTypes().length;
                         int id = rr.target();
-                        // calibrate target id 
+                        // calibrate target id
                         if (0 == id) {
                             if (isConstructor) {
                                 id = -1;
@@ -119,8 +121,8 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                     }
                 }
             }
-            
-            if (buildAuthorityRegistryOnly) return;
+
+            if (buildAuthorityRegistryOnly) continue;
 
             // process ra
             if (null != ra) {
@@ -156,13 +158,16 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                                 + ", " + sParam + "); throw $e;}", etype);
             }
         }
-        
+
+        if (buildAuthorityRegistryOnly) return;
+
         applicationClass.enhancedByteCode = ctClass.toBytecode();
         ctClass.detach();
     }
 
     public void buildAuthorityRegistry() throws Exception {
         if (Authority.reg_.size() < 1) {
+            Plugin.debug("building authority registry");
             // force build authority registry
             for (ApplicationClass ac : Play.classes.all()) {
                 enhance_(ac, true);
@@ -170,7 +175,7 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
         }
         Authority.ensureRightPrivilege();
     }
-    
+
     public void rebuildAuthorityRegistry() throws Exception {
         Authority.reg_.clear();
         buildAuthorityRegistry();
@@ -225,6 +230,9 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
 
         private static void registAuthoriable_(String key, RequireRight rr,
                 RequirePrivilege rp) {
+            if (Logger.isTraceEnabled()) {
+                Plugin.trace("register authoriable [%s: (%s|%s)]", key, (null == rr) ? "null-right" : rr.value(), (null == rp) ? "null-privilege" : rp.value() );
+            }
             reg_.put(key, new Authority(key, rr, rp));
         }
 
@@ -305,7 +313,7 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                                 "cannot determine principal account");
                     }
                 }
-                
+
                 // superuser check
                 boolean isSuperUser = false;
                 if (Plugin.superuser > 0) {

@@ -51,6 +51,18 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
                 String.format(msg, args));
     }
 
+    public static void info(String msg, Object... args) {
+        Logger.info(msg_(msg, args));
+    }
+
+    public static void debug(String msg, Object... args) {
+        Logger.debug(msg_(msg, args));
+    }
+
+    public static void trace(String msg, Object... args) {
+        Logger.trace(msg_(msg, args));
+    }
+
     private static Enhancer e_ = new Enhancer();
 
     public void enhance(ApplicationClass applicationClass) throws Exception {
@@ -74,7 +86,7 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
 //       if (b && null == t.getCause()) return b;
 //       return noAccess_(t.getCause());
 //   }
-//   
+//
 //   @Override
 //   public void onInvocationException(Throwable t) {
 //       if (noAccess_(t)) {
@@ -98,7 +110,7 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
             }
             Play.configuration.put("jpa.entities", jpaEntities);
         }
-        
+
         String s = Play.configuration.getProperty("aaa.superuser");
         if (null != s) {
             try {
@@ -113,12 +125,13 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
         else
             Logger.info(msg_("superuser privilege: %s", superuser));
     }
-    
+
     public static int superuser = 9999;
 
     @Override
     public void onApplicationStart() {
         instance_ = this;
+        debug("onApplicationStart");
         load_();
         if (Play.mode == Mode.DEV && Boolean.parseBoolean(Play.configuration.getProperty(DISABLE, "false"))) {
             Logger.warn("AAA disabled in Dev mode");
