@@ -199,8 +199,12 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
                     String type = (String) mm.get("type");
                     if (null == type) type = "account"; // default item type is account
                     if (P_Account.matcher(type).matches()) {
-                        if (null != accFact.getByName(name)) continue;
-                        IAccount acc = accFact.create(name);
+                        IAccount acc = accFact.getByName(name);
+                        if (null != acc) {
+                            accounts.put(name, acc);
+                            continue;
+                        }
+                        acc = accFact.create(name);
                         String password = (String)mm.get("password");
                         acc.setPassword(password);
                         s = (String)mm.get("privilege");
@@ -219,19 +223,31 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
                         }
                         accounts.put(name, acc);
                     } else if (P_Privilege.matcher(type).matches()) {
-                        if (null != priFact.getByName(name)) continue;
+                        IPrivilege pri = priFact.getByName(name);
+                        if (null != pri) {
+                            privileges.put(name, pri);
+                            continue;
+                        }
                         int lvl = (Integer)mm.get("level");
-                        IPrivilege pri = priFact.create(name, lvl);
+                        pri = priFact.create(name, lvl);
                         privileges.put(name, pri);
                     } else if (P_Right.matcher(type).matches()) {
-                        if (null != rigFact.getByName(name)) continue;
-                        IRight right = rigFact.create(name);
-                        boolean dyna = mm.containsKey("dynamic") ? (Boolean)mm.get("dynamic") : false;
+                        IRight right = rigFact.getByName(name);
+                        if (null != right) {
+                            rights.put(name, right);
+                            continue;
+                        }
+                        right = rigFact.create(name);
+                        boolean dyna = mm.containsKey("dynamic") ? (Boolean) mm.get("dynamic") : false;
                         right.setDynamic(dyna);
                         rights.put(name, right);
                     } else if (P_Role.matcher(type).matches()) {
-                        if (null != rolFact.getByName(name)) continue;
-                        IRole role = rolFact.create(name);
+                        IRole role = rolFact.getByName(name);
+                        if (null != role) {
+                            roles.put(name, role);
+                            continue;
+                        }
+                        role = rolFact.create(name);
                         List<String> sl = (List<String>)mm.get("rights");
                         if (null == sl) throw new ConfigurationException("No rights configured for role [" + name + "]");
                         for (String s0: sl) {
