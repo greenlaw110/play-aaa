@@ -1,10 +1,14 @@
 package play.modules.aaa;
 
 import play.Logger;
+import play.utils.FastRuntimeException;
 
-public class NoAccessException extends RuntimeException {
+public class NoAccessException extends FastRuntimeException {
 
     private static final long serialVersionUID = 1080270792010078044L;
+
+    public NoAccessException() {
+    }
 
     public NoAccessException(Throwable cause) {
         super(cause.getMessage());

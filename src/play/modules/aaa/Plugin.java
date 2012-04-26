@@ -44,7 +44,7 @@ import play.vfs.VirtualFile;
  * @version 1.0 23/12/2010
  */
 public class Plugin extends PlayPlugin implements ConfigConstants {
-    public static final String VERSION = "1.2";
+    public static final String VERSION = "1.2i";
 
     private static String msg_(String msg, Object... args) {
         return String.format("AAAPlugin-" + VERSION + "> %1$s",
@@ -128,10 +128,13 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
 
     public static int superuser = 9999;
 
+    public static boolean logCheckTime = false;
+
     @Override
     public void onApplicationStart() {
         instance_ = this;
         debug("onApplicationStart");
+        logCheckTime = Boolean.parseBoolean(Play.configuration.getProperty("aaa.logCheckTime", "false"));
         load_();
         if (Play.mode == Mode.DEV && Boolean.parseBoolean(Play.configuration.getProperty(DISABLE, "false"))) {
             Logger.warn("AAA disabled in Dev mode");

@@ -282,6 +282,11 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
 
         public static void checkPermission(String key, boolean allowSystem)
                 throws NoAccessException {
+            long l = 0;
+            if (Plugin.logCheckTime && Logger.isDebugEnabled()) {
+                Plugin.debug(">>>>>>> [%s]", key);
+                l = System.currentTimeMillis();
+            }
             if (Boolean.parseBoolean(Play.configuration.getProperty(
                     ConfigConstants.DISABLE, "false"))) {
                 return;
@@ -327,6 +332,10 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                 throw nae;
             } catch (Exception e) {
                 throw new NoAccessException(e);
+            } finally {
+                if (Plugin.logCheckTime && Logger.isDebugEnabled()) {
+                    Plugin.debug("<<<<<<< [%s]: %sms", key, System.currentTimeMillis() - l);
+                }
             }
         }
     }
