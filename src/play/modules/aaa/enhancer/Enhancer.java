@@ -128,10 +128,10 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
             if (null != ra) {
                 CtClass[] paraTypes = ctBehavior.getParameterTypes();
                 String  sParam = null;
-                if (0 < paraTypes.length) {
+                if (0 == paraTypes.length) {
                     sParam = "new Object[0]";
                 } else {
-                    sParam = "{$$}";
+                    sParam = "new Object[0]";
                 }
                 String msg = ra.value();
                 if (null == msg || "".equals(msg))
