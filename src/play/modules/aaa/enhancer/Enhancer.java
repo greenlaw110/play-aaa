@@ -1,39 +1,134 @@
 package play.modules.aaa.enhancer;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.*;
 
+import controllers.Secure;
 import javassist.*;
+import javassist.bytecode.AnnotationsAttribute;
+import javassist.bytecode.annotation.*;
 import play.Logger;
 import play.Play;
 import play.classloading.ApplicationClasses.ApplicationClass;
+import play.classloading.enhancers.ControllersEnhancer;
 import play.modules.aaa.*;
 import play.modules.aaa.utils.AAAFactory;
 import play.modules.aaa.utils.AnnotationHelper;
 import play.modules.aaa.utils.ConfigConstants;
+import play.mvc.Before;
+import play.mvc.Controller;
 
 public class Enhancer extends play.classloading.enhancers.Enhancer {
+
+    private static Set<String> skipAuthenticationList = new HashSet<String>();
+    public static boolean hasSkipAuthentication() {
+        return !skipAuthenticationList.isEmpty();
+    }
+    public static boolean checkSkipAuthenticationLists(Set<String> ss) {
+        return skipAuthenticationList.equals(ss);
+    }
+    public static Set<String> getSkipAuthenticationList() {
+        return new HashSet<String>(skipAuthenticationList);
+    }
+
+    public static Enhancer INST = null;
+
+    public static boolean skipAuthentication(String action) {
+        return skipAuthenticationList.contains(action);
+    }
 
     @Override
     public void enhanceThisClass(ApplicationClass applicationClass)
             throws Exception {
         enhance_(applicationClass, false);
+        INST = this;
+    }
+
+    public static void invalidate(ApplicationClass applicationClass) {
+        invalidate(applicationClass.name);
+    }
+
+    private static void invalidate(String name) {
+        if (!name.startsWith("controllers.")) return;
+        List<String> l = new ArrayList<String>();
+        name = name.substring(12);
+        for (String s: skipAuthenticationList) {
+            if (s.startsWith(name)) l.add(s);
+        }
+        skipAuthenticationList.removeAll(l);
+    }
+
+    public void processControllerClass(ApplicationClass applicationClass) throws Exception {
+        String name = applicationClass.name;
+        if (!name.equals("controllers.")) return;
+        CtClass ctClass = makeClass(applicationClass);
+        processControllerClass(ctClass);
+    }
+
+    private void processControllerClass(CtClass ctClass) throws Exception {
+        invalidate(ctClass.getName());
+        for (CtMethod ctMethod: ctClass.getMethods()) {
+            boolean isHandler = false;
+            Annotation noAuth = null;
+            for (Annotation a : getAnnotations(ctMethod).getAnnotations()) {
+                String at = a.getTypeName();
+                if (play.modules.aaa.NoAuthenticate.class.getName().equals(a.getTypeName())) {
+                    noAuth = a;
+                }
+                if (at.startsWith("play.mvc.") || at.endsWith("$ByPass")) {
+                    isHandler = true;
+                    break;
+                }
+            }
+            if (ctMethod.getName().contains("$")) {
+                isHandler = true;
+            } else {
+                if (ctClass.getName().endsWith("$") && ctMethod.getParameterTypes().length == 0) {
+                    try {
+                        ctClass.getField(ctMethod.getName());
+                        isHandler = true;
+                    } catch (NotFoundException e) {
+                        // ok
+                    }
+                }
+            }
+            if (isHandler || null == noAuth) continue;
+
+            int i = ctMethod.getModifiers();
+            if (Modifier.isPublic(i) && Modifier.isStatic(i) && ctMethod.getReturnType().equals(CtClass.voidType)) {
+                skipAuthenticationList.add(ctClass.getName().substring(12).replace("$", "") + "." + ctMethod.getName());
+            }
+        }
+    }
+
+    void enhanceSecure(ApplicationClass secure) throws Exception {
+        CtClass ctClass = makeClass(secure);
+        CtMethod checkAccess = ctClass.getDeclaredMethod("checkAccess");
+        checkAccess.insertBefore("if (play.modules.aaa.enhancer.Enhancer.skipAuthentication(request.action)) {return;}");
+        secure.enhancedByteCode = ctClass.toBytecode();
+        ctClass.defrost();
     }
 
     private void enhance_(ApplicationClass applicationClass,
             boolean buildAuthorityRegistryOnly) throws Exception {
         Plugin.trace("about to enhance applicationClass: %s", applicationClass);
+        if ("controllers.Secure".equals(applicationClass.name)) {
+            if (!buildAuthorityRegistryOnly) enhanceSecure(applicationClass);
+            return;
+        }
         CtClass ctClass = makeClass(applicationClass);
+        if (applicationClass.name.startsWith("controllers.")) {
+            processControllerClass(ctClass);
+        }
+
         Set<CtBehavior> s = new HashSet<CtBehavior>();
         s.addAll(Arrays.asList(ctClass.getDeclaredMethods()));
         s.addAll(Arrays.asList(ctClass.getMethods()));
         s.addAll(Arrays.asList(ctClass.getConstructors()));
         s.addAll(Arrays.asList(ctClass.getDeclaredConstructors()));
         for (final CtBehavior ctBehavior : s) {
-            if (!Modifier.isPublic(ctBehavior.getModifiers()) || javassist.Modifier.isAbstract(ctBehavior.getModifiers())) {
+            if (/*!Modifier.isPublic(ctBehavior.getModifiers()) ||*/ javassist.Modifier.isAbstract(ctBehavior.getModifiers())) {
                 continue;
             }
 

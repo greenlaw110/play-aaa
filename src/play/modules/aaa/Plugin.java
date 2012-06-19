@@ -1,10 +1,7 @@
 package play.modules.aaa;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,7 +10,9 @@ import play.Logger;
 import play.Play;
 import play.Play.Mode;
 import play.PlayPlugin;
+import play.classloading.ApplicationClasses;
 import play.classloading.ApplicationClasses.ApplicationClass;
+import play.classloading.enhancers.ControllersEnhancer;
 import play.db.jpa.JPAPlugin;
 import play.exceptions.ConfigurationException;
 import play.exceptions.UnexpectedException;
@@ -34,7 +33,7 @@ import play.vfs.VirtualFile;
  * <p/>
  * <ul>
  * <li>Interfaces and default implementations in JPA and MongoDB (require
- * {@link http://www.playframework.org/modules/morphia morphia plugin}</li>
+ * {@link //www.playframework.org/modules/morphia morphia plugin}</li>
  * <li>Annotations and byte code enhancements for declarative privilege,
  * rights and accounting on application methods</li>
  * <li>Admin Web UI to manage user accounts/rights/privilege</li>
@@ -64,6 +63,7 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
     }
 
     private static Enhancer e_ = new Enhancer();
+    private Set<String> noAuthenticated = new HashSet<String>();
 
     public void enhance(ApplicationClass applicationClass) throws Exception {
         e_.enhanceThisClass(applicationClass);
@@ -134,6 +134,7 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
     public void onApplicationStart() {
         instance_ = this;
         debug("onApplicationStart");
+
         logCheckTime = Boolean.parseBoolean(Play.configuration.getProperty("aaa.logCheckTime", "false"));
         load_();
         if (Play.mode == Mode.DEV && Boolean.parseBoolean(Play.configuration.getProperty(DISABLE, "false"))) {

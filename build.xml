@@ -4,6 +4,7 @@
 
     <path id="project.classpath">
         <pathelement path="${play.path}/framework/classes"/>
+        <pathelement path="tmp/module-classes"/>
         <fileset dir="${play.path}/framework/lib">
             <include name="*.jar"/>
         </fileset>
@@ -17,7 +18,7 @@
             <include name="*.jar"/>
         </fileset>
     </path>
-
+    
     <target name="build" depends="compile">
 
         <copy todir="tmp/classes">
@@ -37,8 +38,16 @@
         </jar>
         <delete dir="tmp" />
     </target>
+    
+    
+    <target name="compile-modules">
+        <mkdir dir="tmp/module-classes" />
+        <javac srcdir="${play.path}/modules/secure/app" destdir="tmp/module-classes" target="1.5" debug="true">
+            <classpath refid="project.classpath" />
+        </javac>
+    </target>
 
-    <target name="compile">
+    <target name="compile" depends="compile-modules">
         <mkdir dir="tmp/classes" />
         <javac srcdir="src" destdir="tmp/classes" target="1.5" debug="true">
             <classpath refid="project.classpath" />

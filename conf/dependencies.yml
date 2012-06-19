@@ -1,4 +1,5 @@
 # History
+# 1.3  - 
 # 1.2j - Fix #2
 # 1.2i - Make NoAccessException extends FastRuntimeException
 # 1.2h - Add aaa.logCheckTime configuration
@@ -19,7 +20,7 @@
 #      - Support _aaa.yml configuration file load on application start
 #      - Dynamic access check now support model based on interface
 # 1.2b - first workable version (on mongodb)
-self: play -> aaa 1.2j
+self: play -> aaa 1.3
 
 require:
     - play 1.2
