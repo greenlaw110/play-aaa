@@ -35,6 +35,7 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
     public static Enhancer INST = null;
 
     public static boolean skipAuthentication(String action) {
+        if (null == skipAuthenticationList) throw new RuntimeException("skipAuthenticationList not initialized");
         return skipAuthenticationList.contains(action);
     }
 
@@ -105,7 +106,7 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
     void enhanceSecure(ApplicationClass secure) throws Exception {
         CtClass ctClass = makeClass(secure);
         CtMethod checkAccess = ctClass.getDeclaredMethod("checkAccess");
-        checkAccess.insertBefore("if (play.modules.aaa.enhancer.Enhancer.skipAuthentication(request.action)) {return;}");
+        checkAccess.insertBefore("if (play.modules.aaa.enhancer.Enhancer.skipAuthentication(play.mvc.Http.Request.current().action)) {return;}");
         secure.enhancedByteCode = ctClass.toBytecode();
         ctClass.defrost();
     }
