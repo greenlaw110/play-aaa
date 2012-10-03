@@ -1,9 +1,10 @@
 package play.modules.aaa;
 
 import play.Logger;
+import play.Play;
 import play.utils.FastRuntimeException;
 
-public class NoAccessException extends FastRuntimeException {
+public class NoAccessException extends RuntimeException {
 
     private static final long serialVersionUID = 1080270792010078044L;
 
@@ -24,4 +25,8 @@ public class NoAccessException extends FastRuntimeException {
         Logger.warn(cause, "Access denied: %s", message);
     }
 
+    public Throwable fillInStackTrace() {
+        if (Play.mode.isDev()) return super.fillInStackTrace();
+        else return null;
+    }
 }

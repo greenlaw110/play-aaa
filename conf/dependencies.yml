@@ -1,4 +1,6 @@
 # History
+# 1.4  - support create, update, delete for "aaa.ddl" configuration to load _aaa.yml, add AAA helper class
+# 1.3b - Fill in stack trace for NoAccessException at dev mode
 # 1.3a - Fix NPE on prod mode introduced with NoAuthenticate support
 # 1.3  - Support NoAuthenticate
 # 1.2j - Fix #2
@@ -21,7 +23,7 @@
 #      - Support _aaa.yml configuration file load on application start
 #      - Dynamic access check now support model based on interface
 # 1.2b - first workable version (on mongodb)
-self: play -> aaa 1.3a
+self: play -> aaa 1.4
 
 require:
     - play 1.2

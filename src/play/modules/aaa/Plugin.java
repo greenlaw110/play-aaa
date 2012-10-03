@@ -19,6 +19,7 @@ import play.exceptions.UnexpectedException;
 import play.libs.IO;
 import play.modules.aaa.PlayDynamicRightChecker.IAccessChecker;
 import play.modules.aaa.enhancer.Enhancer;
+import play.modules.aaa.utils.AAA;
 import play.modules.aaa.utils.AAAFactory;
 import play.modules.aaa.utils.ConfigConstants;
 import play.modules.aaa.utils.ConfigurationAuthenticator;
@@ -99,6 +100,33 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
         PlayDynamicRightChecker.clearCurrentObject();
     }
 
+    public static class DDL {
+        private boolean create;
+        private boolean update;
+        private boolean delete;
+        public boolean create() {return create;}
+        public boolean update() {return update;}
+        public boolean delete() {return delete;}
+
+        DDL(boolean c, boolean u, boolean d) {
+            create = c;
+            update = u;
+            delete = d;
+        }
+
+        public static DDL get() {
+            String s = Play.configuration.getProperty("aaa.ddl");
+            if (s == null) {
+                return Play.mode.isDev()? new DDL(true, true, false) : new DDL(true, false, false);
+            } else {
+                boolean c = s.indexOf("create") != -1;
+                boolean u = s.indexOf("update") != -1;
+                boolean d = s.indexOf("delete") != -1;
+                return new DDL(c, u, d);
+            }
+        }
+    }
+
     @Override
     public void onConfigurationRead() {
         if (isJPAModel_()) {
@@ -159,6 +187,7 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
                 throw new UnexpectedException(e);
             }
         }
+        AAA._loadSuperUser();
         Logger.info(msg_("initialized"));
     }
 
@@ -187,8 +216,15 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
         IRole rolFact = AAAFactory.role();
         IPrivilege priFact = AAAFactory.privilege();
         IRight rigFact = AAAFactory.right();
+        DDL ddl = DDL.get();
         try {
             startTx_();
+            if (ddl.delete()) {
+                accFact._deleteAll();
+                rolFact._deleteAll();
+                rigFact._deleteAll();
+                priFact._deleteAll();
+            }
             Object o = yaml.load(s);
             if (o instanceof LinkedHashMap<?, ?>) {
                 Map<String, IAccount> accounts = new HashMap<String, IAccount>();
@@ -205,18 +241,25 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
                     if (P_Account.matcher(type).matches()) {
                         IAccount acc = accFact.getByName(name);
                         if (null != acc) {
-                            accounts.put(name, acc);
-                            continue;
+                            if (!ddl.update()) continue;
+                        } else {
+                            if (!ddl.create()) continue;
+                            acc = accFact.create(name);
                         }
-                        acc = accFact.create(name);
                         String password = (String)mm.get("password");
-                        acc.setPassword(password);
+                        if (null != password && !"".equals(password.trim())) {
+                            acc.setPassword(password);
+                        }
+                        // privilege for the account
+                        acc.revokePrivilege();
                         s = (String)mm.get("privilege");
                         if (null != s) {
                             IPrivilege p = privileges.get(s);
                             if (null == p) throw new ConfigurationException("Cannot find privilege [" + s + "] when loading account [" + name + "]");
                             acc.assignPrivilege(p);
                         }
+                        // roles for the account
+                        acc.revokeRole(acc.getRoles());
                         List<String> sl = (List<String>) mm.get("roles");
                         if (null != sl) {
                             for (String s0 :  sl) {
@@ -229,29 +272,48 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
                     } else if (P_Privilege.matcher(type).matches()) {
                         IPrivilege pri = priFact.getByName(name);
                         if (null != pri) {
+                            if (!ddl.update()) {
+                                privileges.put(name, pri);
+                                continue;
+                            }
+                            int lvl = (Integer)mm.get("level");
+                            if (pri.getLevel() != lvl) {
+                                pri._delete();
+                                pri = priFact.create(name, lvl);
+                            }
                             privileges.put(name, pri);
-                            continue;
+                        } else {
+                            if (!ddl.create()) continue;
+                            int lvl = (Integer)mm.get("level");
+                            pri = priFact.create(name, lvl);
+                            privileges.put(name, pri);
                         }
-                        int lvl = (Integer)mm.get("level");
-                        pri = priFact.create(name, lvl);
-                        privileges.put(name, pri);
                     } else if (P_Right.matcher(type).matches()) {
                         IRight right = rigFact.getByName(name);
                         if (null != right) {
+                            if (ddl.update()) {
+                                boolean dyna = mm.containsKey("dynamic") ? (Boolean) mm.get("dynamic") : false;
+                                right.setDynamic(dyna);
+                            }
                             rights.put(name, right);
-                            continue;
+                        } else {
+                            if (!ddl.create()) continue;
+                            right = rigFact.create(name);
+                            boolean dyna = mm.containsKey("dynamic") ? (Boolean) mm.get("dynamic") : false;
+                            right.setDynamic(dyna);
+                            rights.put(name, right);
                         }
-                        right = rigFact.create(name);
-                        boolean dyna = mm.containsKey("dynamic") ? (Boolean) mm.get("dynamic") : false;
-                        right.setDynamic(dyna);
-                        rights.put(name, right);
                     } else if (P_Role.matcher(type).matches()) {
                         IRole role = rolFact.getByName(name);
                         if (null != role) {
-                            roles.put(name, role);
-                            continue;
+                            if (!ddl.update()) {
+                                roles.put(name, role);
+                                continue;
+                            }
+                            role.removeRights(role.getRights());
+                        } else {
+                            role = rolFact.create(name);
                         }
-                        role = rolFact.create(name);
                         List<String> sl = (List<String>)mm.get("rights");
                         if (null == sl) throw new ConfigurationException("No rights configured for role [" + name + "]");
                         for (String s0: sl) {

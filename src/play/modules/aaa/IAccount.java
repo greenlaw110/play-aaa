@@ -76,12 +76,16 @@ public interface IAccount extends IDataTable, IAAAObject {
     */
    IAccount assignRole(IRole... roles);
 
+   IAccount assignRole(Collection<IRole> roles);
+
    /**
     * Revoke role from this account and return this account
     * @param roles
     * @return
     */
    IAccount revokeRole(IRole... roles);
+
+   IAccount revokeRole(Collection<IRole> roles);
 
    /**
     * Assign privilege to this account and return this account
