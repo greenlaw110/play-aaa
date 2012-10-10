@@ -9,7 +9,7 @@ import play.modules.morphia.Model;
 import java.util.*;
 
 @SuppressWarnings("serial")
-public abstract class GenericRole extends Model implements IRole {
+public abstract class GenericRole extends AAAObject implements IRole {
 
     @Id
     private String name_;

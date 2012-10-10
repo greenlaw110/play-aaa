@@ -6,11 +6,11 @@ import play.modules.morphia.Model;
 import com.google.code.morphia.annotations.Id;
 
 @SuppressWarnings("serial")
-public abstract class GenericPrivilege extends Model implements IPrivilege {
+public abstract class GenericPrivilege extends AAAObject implements IPrivilege {
 
    @Id
    private String name_;
-   
+
    @com.google.code.morphia.annotations.Property("level")
    private int level_;
 
@@ -20,7 +20,7 @@ public abstract class GenericPrivilege extends Model implements IPrivilege {
       name_ = name;
       level_ = level;
    }
-   
+
    // --- implement IPrivilege ---
    @Override
    public int compareTo(IPrivilege o) {
@@ -33,12 +33,12 @@ public abstract class GenericPrivilege extends Model implements IPrivilege {
    public String getName() {
       return name_;
    }
-   
+
    @Override
    public int getLevel() {
       return level_;
    }
-   
+
    // --- morphia model contract for user defined Id entities
    @Override
    public Object getId() {
@@ -50,6 +50,6 @@ public abstract class GenericPrivilege extends Model implements IPrivilege {
    }
    protected static Object processId_(Object id) {
       return id.toString();
-   }   
+   }
 
 }

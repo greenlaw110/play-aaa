@@ -9,7 +9,7 @@ import play.modules.morphia.Model;
 import java.util.*;
 
 @SuppressWarnings("serial")
-public abstract class GenericAccount extends Model implements IAccount {
+public abstract class GenericAccount extends AAAObject implements IAccount {
 
     @Id
     private String name_;

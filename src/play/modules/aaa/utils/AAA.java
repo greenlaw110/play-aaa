@@ -1,10 +1,7 @@
 package play.modules.aaa.utils;
 
 import play.Play;
-import play.modules.aaa.IAccount;
-import play.modules.aaa.IPrivilege;
-import play.modules.aaa.IRight;
-import play.modules.aaa.IRole;
+import play.modules.aaa.*;
 
 public class AAA {
 
@@ -33,6 +30,43 @@ public class AAA {
         IPrivilege p = account.getPrivilege();
         if (null == p) return false;
         return PRV_SUPERUSER.compareTo(p) <= 0;
+    }
+
+    private static boolean setPassword(IAccount acc, String password) {
+        acc.setPassword(password);
+        acc._save();
+        return true;
+    }
+
+    private static boolean setPassword(IAccount acc, String password, String oldPassword) {
+        acc = acc.authenticate(acc.getName(), oldPassword);
+        if (null == acc) return false;
+        setPassword(acc, password);
+        return true;
+    }
+
+    public static boolean setMyPassword(String password) {
+        IAccount me = currentUser();
+        if (null == me) return false;
+        return setPassword(me, password);
+    }
+
+    public static boolean setMyPassword(String password, String oldPassword) {
+        IAccount me = currentUser();
+        if (null == me) return false;
+        return setPassword(me, password, oldPassword);
+    }
+
+    public static boolean setPassword(String username, String password) {
+        IAccount acc = AAA.getAccount(username);
+        if (null == acc) return false;
+        return setPassword(acc, password);
+    }
+
+    public static boolean setPassword(String username, String password, String oldPassword) {
+        IAccount acc = AAA.getAccount(username);
+        if (null == acc) return false;
+        return setPassword(acc, password, oldPassword);
     }
 
     public static boolean hasRole(String... roles) {

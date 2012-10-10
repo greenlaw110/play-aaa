@@ -20,41 +20,41 @@ import com.google.code.morphia.annotations.PrePersist;
 import com.google.code.morphia.annotations.Transient;
 
 @SuppressWarnings("serial")
-public abstract class GenericLog extends Model implements ILog {
+public abstract class GenericLog extends AAAObject implements ILog {
 
    @com.google.code.morphia.annotations.Property("msg")
    private String msg_;
-   
+
    @com.google.code.morphia.annotations.Property("lvl")
    @Indexed
    private String lvl_;
-   
+
    @com.google.code.morphia.annotations.Property("ts")
    private long ts_;
-   
+
    @com.google.code.morphia.annotations.Property("ack")
    @Indexed
    private boolean acknowledged_;
-   
+
    @com.google.code.morphia.annotations.Property("p0")
    private String p0_;
-   
+
    @Transient
    private IAccount principal_;
-   
+
    @com.google.code.morphia.annotations.Property("p1")
    private String p1_;
-   
+
    @Transient
    private IAccount acknowledger_;
-   
+
    @SuppressWarnings("unused")
    @PrePersist
    private void storePrincipal_() {
       p0_ = principal_ == null ? null : principal_.getName();
       p1_ = acknowledger_ == null ? null : acknowledger_.getName();
    }
-   
+
    @SuppressWarnings("unused")
    @PostLoad
    private void retreivePrincipal_() {
@@ -69,20 +69,20 @@ public abstract class GenericLog extends Model implements ILog {
     	  Logger.error(e, "error loading acknowledger by name: %1$s", p1_);
       }
    }
-   
-   protected GenericLog() {}   
+
+   protected GenericLog() {}
    protected GenericLog(IAccount principal, String level, String message) {
       principal_ = principal;
       lvl_ = level;
       msg_ = message;
       ts_ = System.currentTimeMillis();
    }
-   
+
    @Override
    public String getMessage() {
       return msg_;
    }
-   
+
    @Override
    public String getLevel() {
 	   return lvl_;
@@ -92,12 +92,12 @@ public abstract class GenericLog extends Model implements ILog {
    public long getTimestamp() {
       return ts_;
    }
-   
+
    @Override
    public boolean acknowledged() {
 	   return acknowledged_;
    }
-   
+
    @Override
    public void acknowledge() {
 	   try {
@@ -115,24 +115,24 @@ public abstract class GenericLog extends Model implements ILog {
    public IAccount getPrincipal() {
       return principal_;
    }
-   
+
    @Override
    public IAccount getAcknowledger() {
 	   return acknowledger_;
    }
-   
+
    @Override
    public Set<String> levels() {
    	//TODO get list from database
    	String[] levels = {"info", "error", "warn", "fatal"};
    	return new HashSet<String>(Arrays.asList(levels));
    };
-   
+
    @Override
    public String levelFieldName() {
    	return "lvl";
    }
-   
+
    @Override
    public String acknowledgeFieldName() {
    	return "ack";
@@ -142,7 +142,7 @@ public abstract class GenericLog extends Model implements ILog {
    public String timeStampFieldName() {
 	   return "ts";
    }
-   
+
    private static ILogService sysLog_ = PlayLogService.get();
    protected ILogService sysLog() {
        return sysLog_;
