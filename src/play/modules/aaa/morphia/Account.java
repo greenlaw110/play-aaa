@@ -7,6 +7,7 @@ import org.bson.types.ObjectId;
 
 import play.Logger;
 import play.Play;
+import play.modules.aaa.AAAJob;
 import play.modules.aaa.IAAAObject;
 import play.modules.aaa.IAccount;
 import play.modules.aaa.IAuthenticator;
@@ -21,7 +22,7 @@ import com.google.code.morphia.annotations.Entity;
 
 @Entity("aaa_account")
 public class Account extends GenericAccount {
-    
+
     public static final String KEY = "__AAA_ACCOUNT__";
 
 	private static final long serialVersionUID = -5243110444838677957L;
@@ -82,7 +83,7 @@ public class Account extends GenericAccount {
 
 		Request req = Request.current();
 		if (null != req) {
-		    if (null == account) req.args.remove(KEY); else req.args.put(KEY, account); 
+		    if (null == account) req.args.remove(KEY); else req.args.put(KEY, account);
 		}
 		return account;
 	}
@@ -91,7 +92,7 @@ public class Account extends GenericAccount {
 	public IAccount getCurrent() {
 		return current();
 	}
-	
+
 	@Override
 	public void setCurrent(IAccount account) {
 	    Request req = Request.current();
@@ -102,7 +103,7 @@ public class Account extends GenericAccount {
 
 	public static IAccount current() {
 		Request req = Request.current();
-		return null == req ? null : (IAccount)req.args.get(KEY);
+		return null == req ? AAAJob.AAAContext.currentUser() : (IAccount)req.args.get(KEY);
 	}
 
 	@Override

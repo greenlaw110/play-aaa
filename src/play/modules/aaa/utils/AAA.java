@@ -1,6 +1,7 @@
 package play.modules.aaa.utils;
 
 import play.Play;
+import play.jobs.Job;
 import play.modules.aaa.*;
 
 public class AAA {
@@ -112,4 +113,5 @@ public class AAA {
     public static IPrivilege getPrivilege(String name) {
         return AAAFactory.privilege().getByName(name);
     }
+
 }
