@@ -1,7 +1,6 @@
 package play.modules.aaa.utils;
 
 import play.Play;
-import play.jobs.Job;
 import play.modules.aaa.*;
 
 public class AAA {
@@ -13,12 +12,12 @@ public class AAA {
         PRV_SUPERUSER = AAAFactory.privilege().getByName(su_name);
     }
 
-    public static IAccount currentUser() {
+    public static IAccount currentAccount() {
         return AAAFactory.account().getCurrent();
     }
 
     public static boolean isSuperUser() {
-        return isSuperUser(currentUser());
+        return isSuperUser(currentAccount());
     }
 
     public static boolean isSuperUser(String username) {
@@ -47,13 +46,13 @@ public class AAA {
     }
 
     public static boolean setMyPassword(String password) {
-        IAccount me = currentUser();
+        IAccount me = currentAccount();
         if (null == me) return false;
         return setPassword(me, password);
     }
 
     public static boolean setMyPassword(String password, String oldPassword) {
-        IAccount me = currentUser();
+        IAccount me = currentAccount();
         if (null == me) return false;
         return setPassword(me, password, oldPassword);
     }
@@ -71,7 +70,7 @@ public class AAA {
     }
 
     public static boolean hasRole(String... roles) {
-        return hasRole(currentUser(), roles);
+        return hasRole(currentAccount(), roles);
     }
 
     public static boolean hasRole(IAccount account, String... roles) {

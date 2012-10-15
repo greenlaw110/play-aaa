@@ -9,9 +9,13 @@ import controllers.Secure;
 
 public class Security extends Secure.Security {
 
-    static boolean authenticate(String username, String password) {
+    static boolean authentify(String username, String password) {
         IAccount account = AAAFactory.account().authenticate(username, password);
         return null != account;
+    }
+
+    static boolean authenticate(String username, String password) {
+        return authentify(username, password);
     }
 
     static void onDisconnected() {

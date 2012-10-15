@@ -7,7 +7,7 @@ import org.bson.types.ObjectId;
 
 import play.Logger;
 import play.Play;
-import play.modules.aaa.AAAJob;
+import play.modules.aaa.AAAContext;
 import play.modules.aaa.IAAAObject;
 import play.modules.aaa.IAccount;
 import play.modules.aaa.IAuthenticator;
@@ -15,15 +15,12 @@ import play.modules.aaa.utils.ConfigConstants;
 import play.modules.aaa.utils.ConfigurationAuthenticator;
 import play.modules.aaa.utils.LdapAuthenticator;
 import play.modules.morphia.MorphiaPlugin;
-import play.mvc.Http.Request;
 import play.mvc.Scope.Params;
 
 import com.google.code.morphia.annotations.Entity;
 
 @Entity("aaa_account")
 public class Account extends GenericAccount {
-
-    public static final String KEY = "__AAA_ACCOUNT__";
 
 	private static final long serialVersionUID = -5243110444838677957L;
 
@@ -81,10 +78,11 @@ public class Account extends GenericAccount {
 					passwordHash(name, password)).get();
 		}
 
-		Request req = Request.current();
-		if (null != req) {
-		    if (null == account) req.args.remove(KEY); else req.args.put(KEY, account);
-		}
+		if (null == account) {
+		    AAAContext.clear();
+		} else {
+		    AAAContext.currentAccount(account);
+        }
 		return account;
 	}
 
@@ -95,15 +93,15 @@ public class Account extends GenericAccount {
 
 	@Override
 	public void setCurrent(IAccount account) {
-	    Request req = Request.current();
-	    if (null == req) throw new IllegalStateException("No current request found");
-	    if (null == account) req.args.remove(KEY);
-	    req.args.put(KEY, account);
+        current(account);
 	}
 
 	public static IAccount current() {
-		Request req = Request.current();
-		return null == req ? AAAJob.AAAContext.currentUser() : (IAccount)req.args.get(KEY);
+	    return AAAContext.currentAccount();
+	}
+
+	public static void current(IAccount account) {
+	    AAAContext.currentAccount(account);
 	}
 
 	@Override

@@ -2,7 +2,6 @@ package play.modules.aaa;
 
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.yaml.snakeyaml.Yaml;
@@ -10,9 +9,7 @@ import play.Logger;
 import play.Play;
 import play.Play.Mode;
 import play.PlayPlugin;
-import play.classloading.ApplicationClasses;
 import play.classloading.ApplicationClasses.ApplicationClass;
-import play.classloading.enhancers.ControllersEnhancer;
 import play.db.jpa.JPAPlugin;
 import play.exceptions.ConfigurationException;
 import play.exceptions.UnexpectedException;
@@ -24,7 +21,6 @@ import play.modules.aaa.utils.AAAFactory;
 import play.modules.aaa.utils.ConfigConstants;
 import play.modules.aaa.utils.ConfigurationAuthenticator;
 import play.mvc.Scope.Session;
-import play.templates.TemplateLoader;
 import play.vfs.VirtualFile;
 
 /**
@@ -78,7 +74,7 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
     public void beforeActionInvocation(Method actionMethod) {
         String name = Session.current().get("username");
         IAccount account = AAAFactory.account().getByName(name);
-        if (null != account) account.setCurrent(account);
+        if (null != account) AAAContext.currentAccount(account);
         else Session.current().remove("username");
     }
 
