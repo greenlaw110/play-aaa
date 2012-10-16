@@ -55,9 +55,9 @@ public class PlayDynamicRightChecker extends Controller implements
     }
 
     public static boolean hasAccessTo(Object obj) {
+        if (null == obj) obj = AAA.targetResource();
         if (null == obj) return false;
-        IAccount acc = (null == Play.configuration) ? null : AAAFactory
-                .account().getCurrent();
+        IAccount acc = (null == Play.configuration) ? null : AAA.currentAccount();
         if (null == acc) {
             return false;
         }
@@ -90,8 +90,7 @@ public class PlayDynamicRightChecker extends Controller implements
 
     @SuppressWarnings("unchecked")
     public static boolean _hasAccess() {
-        Object obj = AAA.targetResource();
-        return null == obj ? false : hasAccessTo(obj);
+        return hasAccessTo(null);
     }
 
     @Override

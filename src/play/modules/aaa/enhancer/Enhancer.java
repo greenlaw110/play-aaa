@@ -314,6 +314,11 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
             return p_;
         }
 
+        @Override
+        public Object getTargetResource() {
+            return null;
+        }
+
         private static final Map<String, Authority> reg_ = new HashMap<String, Authority>();
 
         private static void registAuthoriable_(String key, RequireRight rr,

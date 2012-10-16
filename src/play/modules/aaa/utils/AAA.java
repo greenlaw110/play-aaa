@@ -171,7 +171,7 @@ public class AAA {
     public static IAuthorizeable authorizeable(String name) {
         final IPrivilege privilege = getPrivilege(name);
         final IRight right = getRight(name);
-        IAuthorizeable a = new IAuthorizeable() {
+        IAuthorizeable a = new IAuthorizeable.AuthorizeableBase() {
             @Override
             public IRight getRequiredRight() {
                 return right;
@@ -187,7 +187,7 @@ public class AAA {
 
     public static IAuthorizeable authByRight(String name) {
         final IRight right = getRight(name);
-        IAuthorizeable a = new IAuthorizeable() {
+        IAuthorizeable a = new IAuthorizeable.AuthorizeableBase() {
             @Override
             public IRight getRequiredRight() {
                 return right;
@@ -203,7 +203,7 @@ public class AAA {
 
     public static IAuthorizeable authByPrivilege(String name) {
         final IPrivilege privilege = getPrivilege(name);
-        IAuthorizeable a = new IAuthorizeable() {
+        IAuthorizeable a = new IAuthorizeable.AuthorizeableBase() {
             @Override
             public IRight getRequiredRight() {
                 return null;
@@ -218,7 +218,7 @@ public class AAA {
     }
 
     public static IAuthorizeable authByRight(final IRight right) {
-        IAuthorizeable a = new IAuthorizeable() {
+        IAuthorizeable a = new IAuthorizeable.AuthorizeableBase() {
             @Override
             public IRight getRequiredRight() {
                 return right;
@@ -233,7 +233,7 @@ public class AAA {
     }
 
     public static IAuthorizeable authByPrivilege(final IPrivilege privilege) {
-        IAuthorizeable a = new IAuthorizeable() {
+        IAuthorizeable a = new IAuthorizeable.AuthorizeableBase() {
             @Override
             public IRight getRequiredRight() {
                 return null;
@@ -248,7 +248,7 @@ public class AAA {
     }
 
     public static IAuthorizeable authorizeable(final IPrivilege privilege, final IRight right) {
-        IAuthorizeable a = new IAuthorizeable() {
+        IAuthorizeable a = new IAuthorizeable.AuthorizeableBase() {
             @Override
             public IRight getRequiredRight() {
                 return right;
@@ -262,4 +262,93 @@ public class AAA {
         return a;
     }
 
+    // ----------------------------------------------
+
+    /**
+     * Create an authorizable by name (might be right or privilege)
+     * @param name
+     * @return
+     */
+    public static IAuthorizeable dynamicAuthorizeable(String name, final Object target) {
+        final IPrivilege privilege = getPrivilege(name);
+        final IRight right = getRight(name);
+        IAuthorizeable a = new IAuthorizeable.AuthorizeableBase() {
+            @Override
+            public IRight getRequiredRight() {
+                return right;
+            }
+
+            @Override
+            public IPrivilege getRequiredPrivilege() {
+                return privilege;
+            }
+
+            @Override
+            public Object getTargetResource() {
+                return target;
+            }
+        };
+        return a;
+    }
+
+    public static IAuthorizeable dynamicAuthByRight(String name, final Object target) {
+        final IRight right = getRight(name);
+        IAuthorizeable a = new IAuthorizeable.AuthorizeableBase() {
+            @Override
+            public IRight getRequiredRight() {
+                return right;
+            }
+
+            @Override
+            public IPrivilege getRequiredPrivilege() {
+                return null;
+            }
+
+            @Override
+            public Object getTargetResource() {
+                return target;
+            }
+        };
+        return a;
+    }
+
+    public static IAuthorizeable dynamicAuthByRight(final IRight right, final Object target) {
+        IAuthorizeable a = new IAuthorizeable.AuthorizeableBase() {
+            @Override
+            public IRight getRequiredRight() {
+                return right;
+            }
+
+            @Override
+            public IPrivilege getRequiredPrivilege() {
+                return null;
+            }
+
+            @Override
+            public Object getTargetResource() {
+                return target;
+            }
+        };
+        return a;
+    }
+
+    public static IAuthorizeable dynamicAuthorizeable(final IPrivilege privilege, final IRight right, final Object target) {
+        IAuthorizeable a = new IAuthorizeable() {
+            @Override
+            public IRight getRequiredRight() {
+                return right;
+            }
+
+            @Override
+            public IPrivilege getRequiredPrivilege() {
+                return privilege;
+            }
+
+            @Override
+            public Object getTargetResource() {
+                return target;
+            }
+        };
+        return a;
+    }
 }

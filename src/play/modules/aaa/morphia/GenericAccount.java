@@ -4,6 +4,7 @@ import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.Reference;
 import play.libs.Crypto;
 import play.modules.aaa.*;
+import play.modules.aaa.utils.AAA;
 import play.modules.morphia.Model;
 
 import java.util.*;
@@ -118,7 +119,7 @@ public abstract class GenericAccount extends AAAObject implements IAccount {
             for (IRight right : role.getRights()) {
                 if (right.getName().equals(reqR.getName())) {
                     if (right.isDynamic()) {
-                        return PlayDynamicRightChecker._hasAccess();
+                        return PlayDynamicRightChecker.hasAccessTo(object.getTargetResource());
                     } else {
                         return true;
                     }
@@ -126,6 +127,51 @@ public abstract class GenericAccount extends AAAObject implements IAccount {
             }
         }
         return false;
+    }
+
+    @Override
+    public void checkAccess(IAuthorizeable object) throws NoAccessException {
+        if (!hasAccessTo(object)) throw new NoAccessException();
+    }
+
+    @Override
+    public boolean hasRight(String right, Object target) {
+        return hasAccessTo(AAA.dynamicAuthByRight(right, target));
+    }
+
+    @Override
+    public boolean hasRight(IRight right, Object target) {
+        return hasAccessTo(AAA.dynamicAuthByRight(right, target));
+    }
+
+    @Override
+    public boolean hasPrivilege(IPrivilege privilege) {
+        return hasAccessTo(AAA.authByPrivilege(privilege));
+    }
+
+    @Override
+    public boolean hasPrivilege(String privilege) {
+        return hasAccessTo(AAA.authByPrivilege(privilege));
+    }
+
+    @Override
+    public void checkRight(String right, Object target) throws NoAccessException {
+        if (!hasRight(right, target)) throw new NoAccessException();
+    }
+
+    @Override
+    public void checkRight(IRight right, Object target) throws NoAccessException {
+        if (!hasRight(right, target)) throw new NoAccessException();
+    }
+
+    @Override
+    public void checkPrivilege(String privilege) throws NoAccessException {
+        if (!hasPrivilege(privilege)) throw new NoAccessException();
+    }
+
+    @Override
+    public void checkPrivilege(IPrivilege privilege) throws NoAccessException {
+        if (!hasPrivilege(privilege)) throw new NoAccessException();
     }
 
     // --- morphia model contract for user defined Id entities
