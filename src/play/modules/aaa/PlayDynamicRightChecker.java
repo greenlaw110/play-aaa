@@ -6,27 +6,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import play.Play;
+import play.modules.aaa.utils.AAA;
 import play.modules.aaa.utils.AAAFactory;
 import play.mvc.Controller;
 
 public class PlayDynamicRightChecker extends Controller implements
         IDynamicRightChecker {
-
-    private static ThreadLocal<Object> curObj_ = new ThreadLocal<Object>();
-
-    public static void setCurrentObject(Object model) {
-        curObj_.set(model);
-    }
-
-    public static void setObjectIfNoCurrent(Object model) {
-        if (null == curObj_.get()) {
-            curObj_.set(model);
-        }
-    }
-
-    public static void clearCurrentObject() {
-        curObj_.remove();
-    }
 
     public interface IAccessChecker<M> {
         boolean hasAccess(IAccount account, M model);
@@ -68,7 +53,7 @@ public class PlayDynamicRightChecker extends Controller implements
 
         checkers_.put(c0, chkr);
     }
-    
+
     public static boolean hasAccessTo(Object obj) {
         if (null == obj) return false;
         IAccount acc = (null == Play.configuration) ? null : AAAFactory
@@ -105,8 +90,8 @@ public class PlayDynamicRightChecker extends Controller implements
 
     @SuppressWarnings("unchecked")
     public static boolean _hasAccess() {
-        Object obj = curObj_.get();
-        return hasAccessTo(obj);
+        Object obj = AAA.targetResource();
+        return null == obj ? false : hasAccessTo(obj);
     }
 
     @Override

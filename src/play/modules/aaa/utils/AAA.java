@@ -1,23 +1,73 @@
 package play.modules.aaa.utils;
 
+import com.greenlaw110.play.JobContext;
 import play.Play;
 import play.modules.aaa.*;
+
+import java.util.Stack;
 
 public class AAA {
 
     private static IPrivilege PRV_SUPERUSER;
 
     public static void _loadSuperUser() {
-        String su_name = Play.configuration.getProperty("aaa.superuser", "superuser");
-        PRV_SUPERUSER = AAAFactory.privilege().getByName(su_name);
+        String su_name = Play.configuration.getProperty(ConfigConstants.SUPERUSER, "superuser");
+        PRV_SUPERUSER = getPrivilege(su_name);
+    }
+
+    private static final String CUR_ACC = "aaa.me";
+    private static final String TGT_RSRC = "aaa.tgt";
+
+    public static void initContext() {
+        JobContext.put(TGT_RSRC, new Stack<Object>());
+    }
+
+    public static void clearContext() {
+        JobContext.remove(CUR_ACC);
+        Stack<Object> s = JobContext.get(TGT_RSRC, Stack.class);
+        if (null != s) {
+            s.clear();
+            JobContext.remove(TGT_RSRC);
+        }
+    }
+
+    /**
+     * Alias of currentAccount()
+     * @return
+     */
+    public static IAccount me() {
+        return JobContext.get(CUR_ACC, IAccount.class);
     }
 
     public static IAccount currentAccount() {
-        return AAAFactory.account().getCurrent();
+        return me();
+    }
+
+    public static void currentAccount(IAccount account) {
+        JobContext.put(CUR_ACC, account);
+    }
+
+    public static void pushTargetResource(Object resource) {
+        Stack<Object> s = JobContext.get(TGT_RSRC, Stack.class);
+        s.push(resource);
+    }
+
+    public static Object targetResource() {
+        Stack<Object> s = JobContext.get(TGT_RSRC, Stack.class);
+        return s.peek();
+    }
+
+    public static Object popTargetResource() {
+        Stack<Object> s = JobContext.get(TGT_RSRC, Stack.class);
+        return s.pop();
     }
 
     public static boolean isSuperUser() {
-        return isSuperUser(currentAccount());
+        return isSuperUser(me());
+    }
+
+    public static IAccount systemAccount() {
+        return AAAFactory.account().getSystemAccount();
     }
 
     public static boolean isSuperUser(String username) {
@@ -111,6 +161,105 @@ public class AAA {
 
     public static IPrivilege getPrivilege(String name) {
         return AAAFactory.privilege().getByName(name);
+    }
+
+    /**
+     * Create an authorizable by name (might be right or privilege)
+     * @param name
+     * @return
+     */
+    public static IAuthorizeable authorizeable(String name) {
+        final IPrivilege privilege = getPrivilege(name);
+        final IRight right = getRight(name);
+        IAuthorizeable a = new IAuthorizeable() {
+            @Override
+            public IRight getRequiredRight() {
+                return right;
+            }
+
+            @Override
+            public IPrivilege getRequiredPrivilege() {
+                return privilege;
+            }
+        };
+        return a;
+    }
+
+    public static IAuthorizeable authByRight(String name) {
+        final IRight right = getRight(name);
+        IAuthorizeable a = new IAuthorizeable() {
+            @Override
+            public IRight getRequiredRight() {
+                return right;
+            }
+
+            @Override
+            public IPrivilege getRequiredPrivilege() {
+                return null;
+            }
+        };
+        return a;
+    }
+
+    public static IAuthorizeable authByPrivilege(String name) {
+        final IPrivilege privilege = getPrivilege(name);
+        IAuthorizeable a = new IAuthorizeable() {
+            @Override
+            public IRight getRequiredRight() {
+                return null;
+            }
+
+            @Override
+            public IPrivilege getRequiredPrivilege() {
+                return privilege;
+            }
+        };
+        return a;
+    }
+
+    public static IAuthorizeable authByRight(final IRight right) {
+        IAuthorizeable a = new IAuthorizeable() {
+            @Override
+            public IRight getRequiredRight() {
+                return right;
+            }
+
+            @Override
+            public IPrivilege getRequiredPrivilege() {
+                return null;
+            }
+        };
+        return a;
+    }
+
+    public static IAuthorizeable authByPrivilege(final IPrivilege privilege) {
+        IAuthorizeable a = new IAuthorizeable() {
+            @Override
+            public IRight getRequiredRight() {
+                return null;
+            }
+
+            @Override
+            public IPrivilege getRequiredPrivilege() {
+                return privilege;
+            }
+        };
+        return a;
+    }
+
+    public static IAuthorizeable authorizeable(final IPrivilege privilege, final IRight right) {
+        IAuthorizeable a = new IAuthorizeable() {
+            @Override
+            public IRight getRequiredRight() {
+                return right;
+            }
+
+            @Override
+            public IPrivilege getRequiredPrivilege() {
+                return privilege;
+            }
+        };
+        return a;
     }
 
 }

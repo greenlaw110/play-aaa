@@ -4,6 +4,7 @@ import play.modules.aaa.IAccount;
 import play.modules.aaa.IAuthorizeable;
 import play.modules.aaa.IPrivilege;
 import play.modules.aaa.IRight;
+import play.modules.aaa.utils.AAA;
 import play.modules.aaa.utils.AAAFactory;
 import controllers.Secure;
 
@@ -26,19 +27,7 @@ public class Security extends Secure.Security {
         IAccount account = AAAFactory.account().getCurrent();
         if (null == account) return false;
 
-        final IPrivilege privilege = AAAFactory.privilege().getByName(profile);
-        final IRight right = AAAFactory.right().getByName(profile);
-        IAuthorizeable a = new IAuthorizeable() {
-            @Override
-            public IRight getRequiredRight() {
-                return right;
-            }
-
-            @Override
-            public IPrivilege getRequiredPrivilege() {
-                return privilege;
-            }
-        };
+        IAuthorizeable a = AAA.authorizeable(profile);
         return account.hasAccessTo(a);
     }
 }

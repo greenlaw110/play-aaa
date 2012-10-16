@@ -7,13 +7,10 @@ import org.bson.types.ObjectId;
 
 import play.Logger;
 import play.Play;
-import play.modules.aaa.AAAContext;
+import play.modules.aaa.utils.*;
 import play.modules.aaa.IAAAObject;
 import play.modules.aaa.IAccount;
 import play.modules.aaa.IAuthenticator;
-import play.modules.aaa.utils.ConfigConstants;
-import play.modules.aaa.utils.ConfigurationAuthenticator;
-import play.modules.aaa.utils.LdapAuthenticator;
 import play.modules.morphia.MorphiaPlugin;
 import play.mvc.Scope.Params;
 
@@ -79,9 +76,9 @@ public class Account extends GenericAccount {
 		}
 
 		if (null == account) {
-		    AAAContext.clear();
+            AAA.clearContext();
 		} else {
-		    AAAContext.currentAccount(account);
+		    AAA.currentAccount(account);
         }
 		return account;
 	}
@@ -97,11 +94,11 @@ public class Account extends GenericAccount {
 	}
 
 	public static IAccount current() {
-	    return AAAContext.currentAccount();
+	    return AAA.currentAccount();
 	}
 
 	public static void current(IAccount account) {
-	    AAAContext.currentAccount(account);
+	    AAA.currentAccount(account);
 	}
 
 	@Override

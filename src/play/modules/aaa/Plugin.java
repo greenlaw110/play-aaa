@@ -72,13 +72,19 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
 
     @Override
     public void beforeActionInvocation(Method actionMethod) {
+        AAA.initContext();
         String name = Session.current().get("username");
         IAccount account = AAAFactory.account().getByName(name);
-        if (null != account) AAAContext.currentAccount(account);
+        if (null != account) AAA.currentAccount(account);
         else Session.current().remove("username");
     }
 
-//   private boolean noAccess_(Throwable t) {
+    @Override
+    public void afterInvocation() {
+        AAA.clearContext();
+    }
+
+    //   private boolean noAccess_(Throwable t) {
 //       boolean b = t instanceof NoAccessException;
 //       if (b && null == t.getCause()) return b;
 //       return noAccess_(t.getCause());
@@ -90,11 +96,6 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
 //           throw new Forbidden(t.getMessage());
 //       }
 //   }
-
-    @Override
-    public void invocationFinally() {
-        PlayDynamicRightChecker.clearCurrentObject();
-    }
 
     public static class DDL {
         private boolean create;

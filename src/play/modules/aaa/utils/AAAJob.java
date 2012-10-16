@@ -1,24 +1,13 @@
 package play.modules.aaa.utils;
 
+import com.greenlaw110.play.ContextualJob;
 import play.jobs.Job;
 import play.modules.aaa.IAccount;
 
 /**
- * Created with IntelliJ IDEA.
- * User: luog
- * Date: 15/10/12
- * Time: 10:29 AM
- * To change this template use File | Settings | File Templates.
+ * Use com.greenlaw110.play.ContextualJob from play-app-base instead
+ * @see http://github.com/greenlaw110/play-app-base
  */
-public class AAAJob<V> extends Job<V> {
-
-    private final IAccount me = AAA.currentAccount();
-
-    @Override
-    public boolean init() {
-        if (null != me) {
-            play.modules.aaa.AAAContext.currentAccount(me);
-        }
-        return super.init();
-    }
+@Deprecated
+public class AAAJob<V> extends ContextualJob<V> {
 }

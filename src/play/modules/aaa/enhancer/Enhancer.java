@@ -1,23 +1,14 @@
 package play.modules.aaa.enhancer;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.*;
 
-import controllers.Secure;
 import javassist.*;
-import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.annotation.*;
 import play.Logger;
 import play.Play;
 import play.classloading.ApplicationClasses.ApplicationClass;
-import play.classloading.enhancers.ControllersEnhancer;
 import play.modules.aaa.*;
-import play.modules.aaa.utils.AAAFactory;
-import play.modules.aaa.utils.AnnotationHelper;
-import play.modules.aaa.utils.ConfigConstants;
-import play.mvc.Before;
-import play.mvc.Controller;
+import play.modules.aaa.utils.*;
 
 public class Enhancer extends play.classloading.enhancers.Enhancer {
 
@@ -202,7 +193,8 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                         if (id == -1) sid = "_";
                         if (id > -1) sid = String.valueOf(id);
                         if (null != sid) {
-                            curObj = "play.modules.aaa.PlayDynamicRightChecker.setObjectIfNoCurrent($" + sid + ");";
+                            curObj = "play.modules.aaa.utils.AAA.pushTargetResource($" + sid + ");";
+                            ctBehavior.insertAfter("play.modules.aaa.utils.AAA.popTargetResource();", true);
                         }
 
                         if (-1 == id) before = false;
@@ -391,12 +383,11 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
             IAuthorizeable a = reg_.get(key);
             if (null == a) {
                 throw new RuntimeException(
-                        "oops, something wrong with enhancer... ?");
+                        "oops, something wrong with AAA Enhancement... ?");
             }
             IAccount acc = null;
             try {
-                IAccount accFact = AAAFactory.account();
-                acc = accFact.getCurrent();
+                acc = AAA.currentAccount();
                 if (null == acc) {
                     if (allowSystem) {
                         if (!Boolean
@@ -407,7 +398,7 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                             // suppress permission check for system account
                             return;
                         }
-                        acc = accFact.getSystemAccount();
+                        acc = AAA.systemAccount();
                     }
                     if (null == acc) {
                         throw new NoAccessException(
