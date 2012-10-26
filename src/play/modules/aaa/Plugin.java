@@ -4,6 +4,8 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import com.greenlaw110.IContextInitializer;
+import com.greenlaw110.play.JobContext;
 import org.yaml.snakeyaml.Yaml;
 import play.Logger;
 import play.Play;
@@ -40,7 +42,7 @@ import play.vfs.VirtualFile;
  * @version 1.0 23/12/2010
  */
 public class Plugin extends PlayPlugin implements ConfigConstants {
-    public static final String VERSION = "1.5";
+    public static final String VERSION = "1.6e";
 
     private static String msg_(String msg, Object... args) {
         return String.format("AAAPlugin-" + VERSION + "> %1$s",
@@ -72,7 +74,6 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
 
     @Override
     public void beforeActionInvocation(Method actionMethod) {
-        AAA.initContext();
         String name = Session.current().get("username");
         IAccount account = AAAFactory.account().getByName(name);
         if (null != account) AAA.currentAccount(account);
@@ -185,6 +186,12 @@ public class Plugin extends PlayPlugin implements ConfigConstants {
             }
         }
         AAA._loadSuperUser();
+        JobContext.registerInitializer(new IContextInitializer() {
+            @Override
+            public void initContext() {
+                AAA.initContext();
+            }
+        });
         Logger.info(msg_("initialized"));
     }
 

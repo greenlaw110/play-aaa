@@ -62,6 +62,17 @@ public interface IAccount extends IDataTable, IAAAObject {
      */
     boolean hasAccessTo(IAuthorizeable object);
 
+    /**
+     * Check whether the account has been granted a specified role
+     * @param role
+     * @return
+     */
+    boolean is(IRole role);
+
+    boolean hasRole(IRole role);
+
+    boolean hasRole(String role);
+
     void checkAccess(IAuthorizeable object) throws NoAccessException;
 
     boolean hasRight(String right, Object target);
@@ -90,14 +101,31 @@ public interface IAccount extends IDataTable, IAAAObject {
     IAccount setPassword(String password);
 
     /**
-     * Assign role to this account and return this account
+     * Assign roles to this account and return this account
+     * @deprecated use grantRole instead
      *
      * @param roles
      * @return
      */
     IAccount assignRole(IRole... roles);
 
+    /**
+     * Grant roles to this account and return this account
+     *
+     * @param roles
+     * @return
+     */
+    IAccount grantRole(IRole... roles);
+
     IAccount assignRole(Collection<IRole> roles);
+
+    /**
+     * Grant a role to this account and return this account
+     *
+     * @param roles
+     * @return
+     */
+    IAccount grantRole(Collection<IRole> roles);
 
     /**
      * Revoke role from this account and return this account

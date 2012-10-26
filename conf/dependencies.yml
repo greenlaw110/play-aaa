@@ -1,5 +1,7 @@
 # History
-# 1.6b - Improve API to check dynamic right against a specific target resource
+# 1.6e - Improve NoAccessException handling in Enhancer.checkAccess, add IAccount.is(IRole) API
+# 1.6d - Fix AAA's job context initializing bug
+# 1.6c - Improve API to check dynamic right against a specific target resource
 # 1.6a - Refactor AAA context relevant code
 # 1.6  - Add AAAJob which get the current account from the parent thread
 # 1.5  - support AAAObject properties. E.g. add last and first name to an IAccount instance
@@ -27,13 +29,13 @@
 #      - Support _aaa.yml configuration file load on application start
 #      - Dynamic access check now support model based on interface
 # 1.2b - first workable version (on mongodb)
-self: play -> aaa 1.6b
+self: play -> aaa 1.6e
 
 require:
     - play 1.2
     - play -> secure
     - play -> crud
-    - com.gelinsoft -> app-base 1.3.6
+    - com.gelinsoft -> app-base 1.3.7
 
 repositories:
     - gelinsoft:

@@ -2,6 +2,7 @@ package play.modules.aaa.enhancer;
 
 import java.util.*;
 
+import controllers.Secure;
 import javassist.*;
 import javassist.bytecode.annotation.*;
 import play.Logger;
@@ -9,6 +10,9 @@ import play.Play;
 import play.classloading.ApplicationClasses.ApplicationClass;
 import play.modules.aaa.*;
 import play.modules.aaa.utils.*;
+import play.mvc.Router;
+import play.mvc.Scope;
+import play.mvc.results.Redirect;
 
 public class Enhancer extends play.classloading.enhancers.Enhancer {
 
@@ -390,11 +394,10 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                 throw new RuntimeException(
                         "oops, something wrong with AAA Enhancement... ?");
             }
-            IAccount acc = null;
             try {
-                acc = AAA.currentAccount();
+                IAccount acc = AAA.currentAccount();
                 if (null == acc) {
-                    if (allowSystem) {
+                    if (allowSystem || AAA.allowSystem()) {
                         if (!Boolean
                                 .parseBoolean(Play.configuration
                                         .getProperty(
@@ -421,9 +424,14 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
                     throw new NoAccessException("Access denied");
                 }
             } catch (NoAccessException nae) {
-                throw nae;
+                Scope.Session session = Scope.Session.current();
+                if (null != session && !session.contains("username")) {
+                    throw new Redirect(Router.reverse("controllers.Secure.login").url);
+                } else {
+                    throw nae;
+                }
             } catch (Exception e) {
-                throw new NoAccessException(e);
+                throw new RuntimeException(e);
             } finally {
                 if (Plugin.logCheckTime && Logger.isDebugEnabled()) {
                     Plugin.debug("<<<<<<< [%s]: %sms", key, System.currentTimeMillis() - l);

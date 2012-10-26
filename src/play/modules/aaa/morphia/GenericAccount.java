@@ -53,9 +53,17 @@ public abstract class GenericAccount extends AAAObject implements IAccount {
         return this;
     }
 
+    public IAccount grantRole(IRole... roles) {
+        return assignRole(roles);
+    }
+
     public IAccount assignRole(Collection<IRole> roles) {
         roles_.addAll(roles);
         return this;
+    }
+
+    public IAccount grantRole(Collection<IRole> roles) {
+        return assignRole(roles);
     }
 
     public IAccount revokeRole(IRole... roles) {
@@ -91,6 +99,20 @@ public abstract class GenericAccount extends AAAObject implements IAccount {
     @Override
     public String getName() {
         return name_;
+    }
+
+    public boolean is(IRole role) {
+        return hasRole(role);
+    }
+
+    public boolean hasRole(IRole role) {
+        return roles_.contains(role);
+    }
+
+    public boolean hasRole(String role) {
+        IRole r = AAA.getRole(role);
+        if (null == r) throw new NullPointerException();
+        return hasRole(r);
     }
 
     @Override

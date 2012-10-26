@@ -17,6 +17,7 @@ public class AAA {
 
     private static final String CUR_ACC = "aaa.me";
     private static final String TGT_RSRC = "aaa.tgt";
+    private static final String ALLOW_SYSTEM = "aaa.allowSystem";
 
     public static void initContext() {
         JobContext.put(TGT_RSRC, new Stack<Object>());
@@ -60,6 +61,15 @@ public class AAA {
     public static Object popTargetResource() {
         Stack<Object> s = JobContext.get(TGT_RSRC, Stack.class);
         return s.pop();
+    }
+
+    public static boolean allowSystem() {
+        Boolean allowSystem = JobContext.get(ALLOW_SYSTEM, Boolean.class);
+        return null == allowSystem ? false : allowSystem;
+    }
+
+    public static void allowSystem(boolean allow) {
+        JobContext.put(ALLOW_SYSTEM, true);
     }
 
     public static boolean isSuperUser() {
@@ -351,4 +361,47 @@ public class AAA {
         };
         return a;
     }
+
+    public static boolean hasAccessTo(IAuthorizeable object) {
+        IAccount me = me();
+        if (null == me) return false;
+        return me.hasAccessTo(object);
+    }
+
+    public static void checkAccess(IAuthorizeable object) throws NoAccessException {
+        if (!hasAccessTo(object)) throw new NoAccessException();
+    }
+
+    public static boolean hasRight(String right, Object target) {
+        return hasAccessTo(AAA.dynamicAuthByRight(right, target));
+    }
+
+    public static boolean hasRight(IRight right, Object target) {
+        return hasAccessTo(AAA.dynamicAuthByRight(right, target));
+    }
+
+    public static boolean hasPrivilege(IPrivilege privilege) {
+        return hasAccessTo(AAA.authByPrivilege(privilege));
+    }
+
+    public static boolean hasPrivilege(String privilege) {
+        return hasAccessTo(AAA.authByPrivilege(privilege));
+    }
+
+    public static void checkRight(String right, Object target) throws NoAccessException {
+        if (!hasRight(right, target)) throw new NoAccessException();
+    }
+
+    public static void checkRight(IRight right, Object target) throws NoAccessException {
+        if (!hasRight(right, target)) throw new NoAccessException();
+    }
+
+    public static void checkPrivilege(String privilege) throws NoAccessException {
+        if (!hasPrivilege(privilege)) throw new NoAccessException();
+    }
+
+    public static void checkPrivilege(IPrivilege privilege) throws NoAccessException {
+        if (!hasPrivilege(privilege)) throw new NoAccessException();
+    }
+
 }
