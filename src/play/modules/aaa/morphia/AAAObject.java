@@ -16,7 +16,7 @@ import java.util.Map;
  */
 public abstract class AAAObject extends Model implements IAAAObject {
     @com.google.code.morphia.annotations.Property("prop")
-    private Map<String, String> properties_;
+    private Map<String, String> properties_ = new HashMap<String, String>();
 
     @PostLoad
     void initProperties() {
