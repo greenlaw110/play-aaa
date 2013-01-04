@@ -76,6 +76,11 @@ public abstract class GenericAccount extends AAAObject implements IAccount {
         return this;
     }
 
+    public IAccount revokeAllRoles() {
+        roles_.clear();
+        return this;
+    }
+
     public IAccount assignPrivilege(IPrivilege privilege) {
         privilege_ = privilege;
         return this;

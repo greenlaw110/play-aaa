@@ -1,4 +1,5 @@
 # History
+# 1.7  - add revokeAllRoles interface to IAccount
 # 1.6f - fix bug: new AAAObject doesn't have _properties intialized
 # 1.6e - Improve NoAccessException handling in Enhancer.checkAccess, add IAccount.is(IRole) API
 # 1.6d - Fix AAA's job context initializing bug
@@ -30,7 +31,7 @@
 #      - Support _aaa.yml configuration file load on application start
 #      - Dynamic access check now support model based on interface
 # 1.2b - first workable version (on mongodb)
-self: play -> aaa 1.6f
+self: play -> aaa 1.7
 
 require:
     - play 1.2

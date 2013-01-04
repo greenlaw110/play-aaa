@@ -137,6 +137,8 @@ public interface IAccount extends IDataTable, IAAAObject {
 
     IAccount revokeRole(Collection<IRole> roles);
 
+    IAccount revokeAllRoles();
+
     /**
      * Assign privilege to this account and return this account
      *
