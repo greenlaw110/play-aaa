@@ -25,6 +25,7 @@ public abstract class AAAObject extends Model implements IAAAObject {
 
     @Override
     public IAAAObject _setProperty(String key, String val) {
+        if (null == val) throw new NullPointerException();
         properties_.put(key, val);
         return this;
     }
