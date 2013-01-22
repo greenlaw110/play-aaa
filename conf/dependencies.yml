@@ -1,4 +1,5 @@
 # History
+# 1.7c - improve handling on AAA registry not found issue in Enhancer.checkPermission
 # 1.7b - remove the property when passing null val into AAAObject._setProperty() call
 # 1.7  - add revokeAllRoles interface to IAccount
 # 1.6f - fix bug: new AAAObject doesn't have _properties intialized
@@ -32,7 +33,7 @@
 #      - Support _aaa.yml configuration file load on application start
 #      - Dynamic access check now support model based on interface
 # 1.2b - first workable version (on mongodb)
-self: play -> aaa 1.7b
+self: play -> aaa 1.7c
 
 require:
     - play 1.2

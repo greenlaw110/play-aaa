@@ -391,8 +391,11 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
 
             IAuthorizeable a = reg_.get(key);
             if (null == a) {
-                throw new RuntimeException(
-                        "oops, something wrong with AAA Enhancement... ?");
+                int pos = key.indexOf("(");
+                String className = key.substring(0, pos);
+                ApplicationClass ac = Play.classes.getApplicationClass(className);
+                if (null != ac) ac.refresh();
+                throw new RuntimeException(String.format("Cannot find AAA perm registry by key %s. Suggest to refresh the class %s and try again", key, className));
             }
             try {
                 IAccount acc = AAA.currentAccount();
