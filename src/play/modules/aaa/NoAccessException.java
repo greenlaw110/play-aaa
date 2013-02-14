@@ -25,8 +25,8 @@ public class NoAccessException extends RuntimeException {
         Logger.warn(cause, "Access denied: %s", message);
     }
 
-    public Throwable fillInStackTrace() {
-        if (Play.mode.isDev()) return super.fillInStackTrace();
-        else return null;
-    }
+//    public Throwable fillInStackTrace() {
+//        if (Play.mode.isDev()) return super.fillInStackTrace();
+//        else return null;
+//    }
 }

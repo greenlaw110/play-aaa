@@ -31,6 +31,10 @@ public class AAA {
             JobContext.remove(TGT_RSRC);
         }
     }
+    
+    public static void setSystemAccount() {
+        JobContext.put(CUR_ACC, getAccount("root"));
+    }
 
     /**
      * Alias of currentAccount()

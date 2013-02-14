@@ -392,6 +392,7 @@ public class Enhancer extends play.classloading.enhancers.Enhancer {
             IAuthorizeable a = reg_.get(key);
             if (null == a) {
                 int pos = key.indexOf("(");
+                pos = key.lastIndexOf(".");
                 String className = key.substring(0, pos);
                 ApplicationClass ac = Play.classes.getApplicationClass(className);
                 if (null != ac) ac.refresh();
