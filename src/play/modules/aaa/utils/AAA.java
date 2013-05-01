@@ -1,6 +1,7 @@
 package play.modules.aaa.utils;
 
 import com.greenlaw110.play.JobContext;
+import play.Logger;
 import play.Play;
 import play.modules.aaa.*;
 
@@ -53,6 +54,7 @@ public class AAA {
     }
 
     public static void pushTargetResource(Object resource) {
+        Logger.info("T[%s]push target resource: %s", Thread.currentThread().getId(), resource);
         Stack<Object> s = JobContext.get(TGT_RSRC, Stack.class);
         s.push(resource);
     }
@@ -63,8 +65,11 @@ public class AAA {
     }
 
     public static Object popTargetResource() {
+        Logger.info("T[%s]pop target resource...", Thread.currentThread().getId());
         Stack<Object> s = JobContext.get(TGT_RSRC, Stack.class);
-        return s.pop();
+        Object o = s.empty() ? null : s.pop();
+        Logger.info(">>T[%s]target resource popped: %s", Thread.currentThread().getId(), o);
+        return o;
     }
 
     public static boolean allowSystem() {
