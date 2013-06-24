@@ -1,8 +1,6 @@
 package play.modules.aaa.utils;
 
-import com.greenlaw110.play.ContextualJob;
-import play.jobs.Job;
-import play.modules.aaa.IAccount;
+import org.osgl.play.ContextualJob;
 
 /**
  * Use com.greenlaw110.play.ContextualJob from play-app-base instead

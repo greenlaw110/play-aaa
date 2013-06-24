@@ -1,6 +1,6 @@
 package play.modules.aaa.utils;
 
-import com.greenlaw110.play.JobContext;
+import org.osgl.play.JobContext;
 import play.Logger;
 import play.Play;
 import play.modules.aaa.*;

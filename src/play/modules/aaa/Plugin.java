@@ -1,11 +1,7 @@
 package play.modules.aaa;
 
-import java.lang.reflect.Method;
-import java.util.*;
-import java.util.regex.Pattern;
-
-import com.greenlaw110.IContextInitializer;
-import com.greenlaw110.play.JobContext;
+import org.osgl.IContextInitializer;
+import org.osgl.play.JobContext;
 import org.yaml.snakeyaml.Yaml;
 import play.Logger;
 import play.Play;
@@ -24,6 +20,10 @@ import play.modules.aaa.utils.ConfigConstants;
 import play.modules.aaa.utils.ConfigurationAuthenticator;
 import play.mvc.Scope.Session;
 import play.vfs.VirtualFile;
+
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * <code>play.module.aaa.Plugin</code> provides off the shelf framework for
