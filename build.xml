@@ -14,7 +14,7 @@
         <fileset dir="${play.path}/modules/morphia-1.2.7/lib">
             <include name="*.jar"/>
         </fileset>
-        <fileset dir="${play.path}/modules/app-base/lib">
+        <fileset dir="c:/p/play-app-base/lib">
             <include name="*.jar"/>
         </fileset>
         <fileset dir="lib">
