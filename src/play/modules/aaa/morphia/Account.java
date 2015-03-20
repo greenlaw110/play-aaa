@@ -1,27 +1,28 @@
 package play.modules.aaa.morphia;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.google.code.morphia.annotations.Entity;
 import org.bson.types.ObjectId;
-
 import play.Logger;
 import play.Play;
-import play.modules.aaa.utils.*;
 import play.modules.aaa.IAAAObject;
 import play.modules.aaa.IAccount;
 import play.modules.aaa.IAuthenticator;
+import play.modules.aaa.utils.AAA;
+import play.modules.aaa.utils.ConfigConstants;
+import play.modules.aaa.utils.ConfigurationAuthenticator;
+import play.modules.aaa.utils.LdapAuthenticator;
 import play.modules.morphia.MorphiaPlugin;
 import play.mvc.Scope.Params;
 
-import com.google.code.morphia.annotations.Entity;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity("aaa_account")
 public class Account extends GenericAccount {
 
 	private static final long serialVersionUID = -5243110444838677957L;
 
-	public static IAccount sys_ = null;
+	private static volatile IAccount sys_ = null;
 
 	public Account(String name) {
 		super(name);
@@ -106,18 +107,26 @@ public class Account extends GenericAccount {
 		return system();
 	}
 
-	public static IAccount system() {
-		if (null == sys_) {
-			String sys = Play.configuration.getProperty(
-					ConfigConstants.SYS_ACCOUNT, SYSTEM);
-			Account acc = Account.filter("_id", sys).get();
-			if (null == acc) {
-				acc = new Account(sys);
-				acc.save();
-			}
-			sys_ = acc;
-		}
-		return sys_;
+    private static final Object lock_ = new Object();
+
+    public static IAccount system() {
+        IAccount retVal = sys_;
+		if (null == retVal) {
+            synchronized (lock_) {
+                retVal = sys_;
+                if (null == retVal) {
+                    String sys = Play.configuration.getProperty(
+                            ConfigConstants.SYS_ACCOUNT, SYSTEM);
+                    Account acc = Account.filter("_id", sys).get();
+                    if (null == acc) {
+                        acc = new Account(sys);
+                        acc.save();
+                    }
+                    retVal = sys_ = acc;
+                }
+            }
+        }
+        return retVal;
 	}
 
 	@Override

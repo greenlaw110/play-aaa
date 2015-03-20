@@ -2,6 +2,7 @@ package play.modules.aaa.morphia;
 
 import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.Reference;
+import play.Logger;
 import play.libs.Crypto;
 import play.modules.aaa.*;
 import play.modules.aaa.utils.AAA;
